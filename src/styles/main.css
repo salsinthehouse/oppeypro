@@ -1,0 +1,159 @@
+/* Global Styles */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #ffa24d;  /* Entire background set to oppey orange */
+    color: #fff; /* Use white text to contrast with the orange background */
+  }
+  
+  /* Navbar Styles */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #ffa24d;
+    padding: 1rem 2rem;
+  }
+  
+  nav a {
+    color: #fff;
+    text-decoration: none;
+    margin-right: 1rem;
+    font-size: 1rem;
+    transition: color 0.3s;
+  }
+  
+  nav a:hover {
+    color: #ffe6d0;
+  }
+  
+  .home-page {
+    padding: 2rem;
+    text-align: center;  /* Centers inline elements and text */
+  }
+  
+  
+  /* Auth Options Buttons */
+  .auth-options {
+    margin-bottom: 1.5rem;
+  }
+  
+  .auth-options button {
+    font-size: 1rem;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    background-color: #fff; /* White buttons for contrast */
+    color: #ffa24d; /* Button text in oppey orange */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-right: 1rem;
+  }
+  
+  .auth-options button:hover {
+    background-color: #ffe6d0;
+  }
+  
+  .search-filter {
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+    align-items: center;    /* Center them horizontally */
+    gap: 1rem;              /* 1rem space between the search bar and quadrant filter */
+    margin-bottom: 2rem;    /* Some space below the entire search/filter section */
+  }
+  
+  
+  .search-filter input {
+    padding: 0.5rem;
+    width: 100%;
+    max-width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+
+
+
+  /* Quadrant Filter Buttons */
+  .quadrant-filter button {
+    font-size: 0.9rem;
+    margin: 0 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    background-color: transparent;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  
+  .quadrant-filter button:hover,
+  .quadrant-filter button:focus {
+    background-color: #fff;
+    color: #ffa24d;
+  }
+  
+  .shop-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;  /* Centers the shop cards horizontally */
+    gap: 1rem;
+  }
+  
+  
+  .shop-card {
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 300px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .shop-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .shop-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  .shop-card h3 {
+    margin: 0.5rem;
+  }
+  
+  .shop-card p {
+    margin: 0.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .shop-card a {
+    display: block;
+    margin: 0.5rem;
+    text-align: center;
+    padding: 0.5rem;
+    background-color: #ffa24d;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+  }
+  
+  .shop-card a:hover {
+    background-color: #e68a3b;
+  }
+  
+  /* Footer Styles */
+  footer {
+    background-color: #ffa24d;
+    color: #fff;
+    text-align: center;
+    padding: 1rem;
+    margin-top: 2rem;
+  }
+  
