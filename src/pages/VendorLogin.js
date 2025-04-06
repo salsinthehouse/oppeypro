@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import '../styles/VendorLogin.css';
 
 const VendorLogin = () => {
   const navigate = useNavigate();
-  const [storeName, setStoreName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-    // Check credentials: we require storeName "Shop1" and password "password"
-    if (storeName === "Shop1" && password === "password") {
+    // Prototype credentials: Email: shop1@oppey.co.nz, Password: password
+    if (email === 'shop1@oppey.co.nz' && password === 'password') {
       localStorage.setItem('vendorLoggedIn', 'true');
-      localStorage.setItem('vendorStoreName', storeName);
+      localStorage.setItem('vendorStoreName', 'Shop1');
       navigate('/vendor');
     } else {
       setError('Invalid credentials. Please try again.');
@@ -20,21 +21,21 @@ const VendorLogin = () => {
   };
 
   return (
-    <div style={{ textAlign: 'center', padding: '2rem' }}>
+    <div className="vendor-login">
       <h2>Vendor Login</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'inline-block', textAlign: 'left' }}>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Store Name:</label><br />
+      {error && <p className="vendor-login__error">{error}</p>}
+      <form onSubmit={handleLogin} className="vendor-login__form">
+        <div className="vendor-login__form-group">
+          <label>Email:</label>
           <input
-            type="text"
-            value={storeName}
-            onChange={(e) => setStoreName(e.target.value)}
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Password:</label><br />
+        <div className="vendor-login__form-group">
+          <label>Password:</label>
           <input
             type="password"
             value={password}
@@ -42,17 +43,7 @@ const VendorLogin = () => {
             required
           />
         </div>
-        <button
-          type="submit"
-          style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: '#ffa24d',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
+        <button type="submit" className="vendor-login__button">
           Login
         </button>
       </form>

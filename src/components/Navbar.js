@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import CartIcon from './CartIcon'; // Ensure you have this component
 import '../styles/Navbar.css';
 
 const Navbar = () => {
@@ -38,16 +39,16 @@ const Navbar = () => {
                 onClick={() => setMenuOpen(!menuOpen)}
                 style={{
                   width: '30px',
+                  height: '24px',
                   cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  height: '24px',
                 }}
               >
-                <div style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
-                <div style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
-                <div style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
+                <div className="burger-line" style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
+                <div className="burger-line" style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
+                <div className="burger-line" style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
               </div>
               {menuOpen && (
                 <div className="navbar__dropdown">
@@ -68,16 +69,16 @@ const Navbar = () => {
                 onClick={() => setMenuOpen(!menuOpen)}
                 style={{
                   width: '30px',
+                  height: '24px',
                   cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  height: '24px',
                 }}
               >
-                <div style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
-                <div style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
-                <div style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
+                <div className="burger-line" style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
+                <div className="burger-line" style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
+                <div className="burger-line" style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
               </div>
               {menuOpen && (
                 <div className="navbar__dropdown">
@@ -96,6 +97,7 @@ const Navbar = () => {
             <Link to="/register/store" className="navbar__link">Register as Store</Link>
           </>
         )}
+        <CartIcon />
       </div>
     </nav>
   );

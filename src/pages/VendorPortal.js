@@ -2,14 +2,10 @@ import React, { useState, useEffect } from 'react';
 import '../styles/VendorPortal.css';
 
 const VendorPortal = () => {
-  // Retrieve vendor store name from localStorage (set during login/registration)
   const vendorStoreName = localStorage.getItem('vendorStoreName') || 'Your Store';
-
-  // Load vendor items from localStorage if available
   const initialVendorItems = JSON.parse(localStorage.getItem('vendorItems')) || [];
   const [items, setItems] = useState(initialVendorItems);
 
-  // State for the new item form; pre-populate location if desired, quadrant defaults to "Central"
   const [newItem, setNewItem] = useState({
     name: '',
     description: '',
@@ -17,10 +13,10 @@ const VendorPortal = () => {
     location: '',
     price: '',
     condition: 'New',
-    quadrant: 'Central'
+    quadrant: 'Central',
+    status: 'active' // active, held, purchased
   });
 
-  // State for editing an existing item
   const [editingItemId, setEditingItemId] = useState(null);
   const [editingItemData, setEditingItemData] = useState({
     name: '',
@@ -32,7 +28,6 @@ const VendorPortal = () => {
     quadrant: 'Central'
   });
 
-  // Save items to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('vendorItems', JSON.stringify(items));
   }, [items]);
@@ -57,10 +52,12 @@ const VendorPortal = () => {
       ...newItem,
       id: Date.now(),
       shop: vendorStoreName,
-      inventoryNumber: items.length + 1
+      inventoryNumber: items.length + 1,
+      status: 'active'
     };
     setItems([...items, itemToAdd]);
-    setNewItem({ name: '', description: '', imageUrl: '', location: newItem.location, price: '', condition: 'New', quadrant: 'Central' });
+    // Preserve the location from newItem in case vendor wants to add more items in same location.
+    setNewItem({ name: '', description: '', imageUrl: '', location: newItem.location, price: '', condition: 'New', quadrant: 'Central', status: 'active' });
   };
 
   const handleEditClick = (item) => {
@@ -100,6 +97,22 @@ const VendorPortal = () => {
 
   const handleEditCancel = () => {
     setEditingItemId(null);
+  };
+
+  // New function: update item status (e.g., held item becomes released or purchased)
+  const handleUpdateStatus = (itemId, newStatus) => {
+    const updatedItems = items.map(item => {
+      if (item.id === itemId) {
+        if (newStatus === 'released') {
+          // When released, clear hold info so that the item is active again.
+          return { ...item, held: false, pickupTime: '', status: 'active' };
+        } else if (newStatus === 'purchased') {
+          return { ...item, status: 'purchased' };
+        }
+      }
+      return item;
+    });
+    setItems(updatedItems);
   };
 
   return (
@@ -209,7 +222,15 @@ const VendorPortal = () => {
                     <p><strong>Quadrant:</strong> {item.quadrant}</p>
                     {item.imageUrl && <img src={item.imageUrl} alt={item.name} />}
                     <p><strong>Location:</strong> {item.location}</p>
-                    <button onClick={() => handleEditClick(item)}>Edit</button>
+                    {item.held && item.pickupTime ? (
+                      <div className="vendor-hold-notice">
+                        <p>This item is held for pick-up at: {item.pickupTime}</p>
+                        <button onClick={() => handleUpdateStatus(item.id, 'released')}>Mark as Released</button>
+                        <button onClick={() => handleUpdateStatus(item.id, 'purchased')}>Mark as Purchased</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => handleEditClick(item)}>Edit</button>
+                    )}
                   </>
                 )}
               </div>
@@ -218,7 +239,7 @@ const VendorPortal = () => {
         )}
       </section>
 
-      <h3>Add a New Item</h3>
+      <h3 className="vendor-portal__form-title">Add a New Item</h3>
       <div className="vendor-portal__form-container">
         {items.length < 20 ? (
           <form onSubmit={handleNewItemSubmit} className="vendor-portal__form">
@@ -312,3 +333,4 @@ const VendorPortal = () => {
 };
 
 export default VendorPortal;
+  

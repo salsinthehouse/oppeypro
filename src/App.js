@@ -3,11 +3,12 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import CustomerLogin from './pages/CustomerLogin';
-import CustomerRegister from './pages/CustomerRegister';
-import RegisterStore from './pages/RegisterStore';
 import VendorLogin from './pages/VendorLogin';
 import VendorPortal from './pages/VendorPortal';
+import RegisterStore from './pages/RegisterStore';
+import Cart from './pages/Cart';
+import CustomerLogin from './pages/CustomerLogin';
+import CustomerRegister from './pages/CustomerRegister';
 
 function App() {
   return (
@@ -20,8 +21,8 @@ function App() {
         <Route path="/register/store" element={<RegisterStore />} />
         <Route path="/login/vendor" element={<VendorLogin />} />
         <Route path="/vendor" element={<VendorPortal />} />
-        <Route path="/account" element={<div>My Account (Coming Soon)</div>} />
-        <Route path="/settings" element={<div>Settings (Coming Soon)</div>} />
+        <Route path="/cart" element={<Cart />} />
+        {/* Other routes */}
       </Routes>
       <Footer />
     </Router>
