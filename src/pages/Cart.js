@@ -5,37 +5,46 @@ const Cart = () => {
   const [cartItems, setCartItems] = useState(() => JSON.parse(localStorage.getItem('cartItems')) || []);
   const [subscription, setSubscription] = useState(() => localStorage.getItem('subscription') === 'true');
 
-  // Update localStorage and dispatch a custom event when cartItems change
   useEffect(() => {
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
     window.dispatchEvent(new Event('cartUpdated'));
   }, [cartItems]);
 
-  // Update subscription in localStorage
   useEffect(() => {
     localStorage.setItem('subscription', subscription.toString());
   }, [subscription]);
 
-  // Remove an item from the cart
   const handleRemoveItem = (itemId) => {
     const updatedCart = cartItems.filter(item => item.id !== itemId);
     setCartItems(updatedCart);
+
+    const storedVendorItems = JSON.parse(localStorage.getItem('vendorItems')) || [];
+    const updatedVendorItems = storedVendorItems.map(item =>
+      item.id === itemId ? { ...item, status: 'active', held: false, pickupTime: '' } : item
+    );
+    localStorage.setItem('vendorItems', JSON.stringify(updatedVendorItems));
+    window.dispatchEvent(new Event('vendorItemsUpdated'));
   };
 
-  // Hold an item: prompt for pickup time and mark the item as held
   const handleHoldItem = (itemId) => {
-    // You could replace this prompt with a proper date/time picker later.
     const pickupTime = prompt("Please enter your preferred pick-up time (e.g., 'April 10, 3:00 PM'):");
     if (!pickupTime) return;
 
     const updatedCart = cartItems.map(item =>
-      item.id === itemId ? { ...item, held: true, pickupTime } : item
+      item.id === itemId ? { ...item, held: true, pickupTime, status: 'held' } : item
     );
     setCartItems(updatedCart);
+
+    const storedVendorItems = JSON.parse(localStorage.getItem('vendorItems')) || [];
+    const updatedVendorItems = storedVendorItems.map(item =>
+      item.id === itemId ? { ...item, held: true, pickupTime, status: 'held' } : item
+    );
+    localStorage.setItem('vendorItems', JSON.stringify(updatedVendorItems));
+    window.dispatchEvent(new Event('vendorItemsUpdated'));
+
     alert(`Hold confirmed. Your pick-up time is set to: ${pickupTime}`);
   };
 
-  // Simulated function for entering payment details
   const handlePaymentDetails = () => {
     alert("Proceeding to payment...");
   };
@@ -68,7 +77,7 @@ const Cart = () => {
                 <p><strong>Price:</strong> {item.price}</p>
                 <p><strong>Quadrant:</strong> {item.quadrant}</p>
                 <p><strong>Location:</strong> {item.location}</p>
-                {item.held ? (
+                {item.held && item.pickupTime ? (
                   <>
                     <p className="held">Item Held</p>
                     <p><strong>Pick-Up Time:</strong> {item.pickupTime}</p>

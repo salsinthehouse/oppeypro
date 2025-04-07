@@ -24,31 +24,24 @@ const Navbar = () => {
     window.location.reload();
   };
 
+  const handleMenuToggle = () => {
+    setMenuOpen(!menuOpen);
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar__logo">
-        <Link to="/" className="navbar__brand">oppey</Link>
+        <Link to="/" className="navbar__brand">OPPEY</Link>
       </div>
       <div className="navbar__links">
         {vendorLoggedIn ? (
           <>
             <span className="navbar__store-title">{vendorStoreName}</span>
             <div className="navbar__menu">
-              <div
-                className="navbar__burger"
-                onClick={() => setMenuOpen(!menuOpen)}
-                style={{
-                  width: '30px',
-                  height: '24px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <div className="burger-line" style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
-                <div className="burger-line" style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
-                <div className="burger-line" style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
+              <div className="navbar__burger" onClick={handleMenuToggle}>
+                <div className="burger-line"></div>
+                <div className="burger-line"></div>
+                <div className="burger-line"></div>
               </div>
               {menuOpen && (
                 <div className="navbar__dropdown">
@@ -64,21 +57,10 @@ const Navbar = () => {
           <>
             <span className="navbar__store-title">{customerName}</span>
             <div className="navbar__menu">
-              <div
-                className="navbar__burger"
-                onClick={() => setMenuOpen(!menuOpen)}
-                style={{
-                  width: '30px',
-                  height: '24px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <div className="burger-line" style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
-                <div className="burger-line" style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
-                <div className="burger-line" style={{ width: '100%', height: '4px', backgroundColor: '#fff', margin: '2px 0' }}></div>
+              <div className="navbar__burger" onClick={handleMenuToggle}>
+                <div className="burger-line"></div>
+                <div className="burger-line"></div>
+                <div className="burger-line"></div>
               </div>
               {menuOpen && (
                 <div className="navbar__dropdown">
@@ -97,7 +79,9 @@ const Navbar = () => {
             <Link to="/register/store" className="navbar__link">Register as Store</Link>
           </>
         )}
-        <CartIcon />
+        <div className="cart-icon-wrapper">
+          <CartIcon />
+        </div>
       </div>
     </nav>
   );

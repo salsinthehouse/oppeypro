@@ -14,7 +14,7 @@ const VendorPortal = () => {
     price: '',
     condition: 'New',
     quadrant: 'Central',
-    status: 'active' // active, held, purchased
+    status: 'active'
   });
 
   const [editingItemId, setEditingItemId] = useState(null);
@@ -31,6 +31,20 @@ const VendorPortal = () => {
   useEffect(() => {
     localStorage.setItem('vendorItems', JSON.stringify(items));
   }, [items]);
+
+  // Listen for custom event to update vendor items if they change elsewhere
+  useEffect(() => {
+    const updateVendorItems = () => {
+      const storedItems = localStorage.getItem('vendorItems');
+      if (storedItems) {
+        setItems(JSON.parse(storedItems));
+      }
+    };
+    window.addEventListener('vendorItemsUpdated', updateVendorItems);
+    return () => {
+      window.removeEventListener('vendorItemsUpdated', updateVendorItems);
+    };
+  }, []);
 
   const handleNewItemChange = (e) => {
     const { name, value, files } = e.target;
@@ -55,8 +69,11 @@ const VendorPortal = () => {
       inventoryNumber: items.length + 1,
       status: 'active'
     };
-    setItems([...items, itemToAdd]);
-    // Preserve the location from newItem in case vendor wants to add more items in same location.
+    const updatedItems = [...items, itemToAdd];
+    setItems(updatedItems);
+    localStorage.setItem('vendorItems', JSON.stringify(updatedItems));
+    window.dispatchEvent(new Event('vendorItemsUpdated'));
+    // Preserve location for subsequent items if desired.
     setNewItem({ name: '', description: '', imageUrl: '', location: newItem.location, price: '', condition: 'New', quadrant: 'Central', status: 'active' });
   };
 
@@ -92,6 +109,8 @@ const VendorPortal = () => {
       return item;
     });
     setItems(updatedItems);
+    localStorage.setItem('vendorItems', JSON.stringify(updatedItems));
+    window.dispatchEvent(new Event('vendorItemsUpdated'));
     setEditingItemId(null);
   };
 
@@ -99,12 +118,11 @@ const VendorPortal = () => {
     setEditingItemId(null);
   };
 
-  // New function: update item status (e.g., held item becomes released or purchased)
+  // Update an item's status (held, released, purchased)
   const handleUpdateStatus = (itemId, newStatus) => {
     const updatedItems = items.map(item => {
       if (item.id === itemId) {
         if (newStatus === 'released') {
-          // When released, clear hold info so that the item is active again.
           return { ...item, held: false, pickupTime: '', status: 'active' };
         } else if (newStatus === 'purchased') {
           return { ...item, status: 'purchased' };
@@ -113,6 +131,18 @@ const VendorPortal = () => {
       return item;
     });
     setItems(updatedItems);
+    localStorage.setItem('vendorItems', JSON.stringify(updatedItems));
+    window.dispatchEvent(new Event('vendorItemsUpdated'));
+  };
+
+  // Delete an item from the listings
+  const handleDeleteItem = (itemId) => {
+    if (window.confirm("Are you sure you want to delete this listing?")) {
+      const updatedItems = items.filter(item => item.id !== itemId);
+      setItems(updatedItems);
+      localStorage.setItem('vendorItems', JSON.stringify(updatedItems));
+      window.dispatchEvent(new Event('vendorItemsUpdated'));
+    }
   };
 
   return (
@@ -222,14 +252,17 @@ const VendorPortal = () => {
                     <p><strong>Quadrant:</strong> {item.quadrant}</p>
                     {item.imageUrl && <img src={item.imageUrl} alt={item.name} />}
                     <p><strong>Location:</strong> {item.location}</p>
-                    {item.held && item.pickupTime ? (
+                    {item.status === 'held' && item.pickupTime ? (
                       <div className="vendor-hold-notice">
                         <p>This item is held for pick-up at: {item.pickupTime}</p>
                         <button onClick={() => handleUpdateStatus(item.id, 'released')}>Mark as Released</button>
                         <button onClick={() => handleUpdateStatus(item.id, 'purchased')}>Mark as Purchased</button>
                       </div>
                     ) : (
-                      <button onClick={() => handleEditClick(item)}>Edit</button>
+                      <>
+                        <button onClick={() => handleEditClick(item)}>Edit</button>
+                        <button onClick={() => handleDeleteItem(item.id)}>Delete</button>
+                      </>
                     )}
                   </>
                 )}
@@ -333,4 +366,3 @@ const VendorPortal = () => {
 };
 
 export default VendorPortal;
-  

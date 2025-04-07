@@ -17,25 +17,24 @@ const Home = () => {
     }
   }, []);
 
-  // All items come from vendorItems in this prototype
-  const allItems = vendorItems;
-
-  // Filter items based on search term and quadrant selection
-  const filteredItems = allItems.filter(item => {
+  // Filter items based on search term, quadrant selection, and only active items are shown
+  const filteredItems = vendorItems.filter(item => {
     const lowerSearch = searchTerm.toLowerCase();
     const matchesSearch =
       item.name.toLowerCase().includes(lowerSearch) ||
       item.description.toLowerCase().includes(lowerSearch);
     const matchesQuadrant =
       selectedQuadrants.length === 0 || selectedQuadrants.includes(item.quadrant);
-    return matchesSearch && matchesQuadrant && !item.held; // Only show items that are not held
+    return (!item.status || item.status === 'active') && matchesSearch && matchesQuadrant;
   });
 
-  // Unlock function: adds the item to cartItems in localStorage and dispatches event
+  // Unlock function: add the item to cart without updating vendorItems status.
+  // The item remains visible on Home until the customer confirms the hold in the Cart.
   const handleUnlock = (item) => {
     let cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
     if (!cartItems.find(i => i.id === item.id)) {
-      cartItems.push({ ...item, unlocked: true });
+      const unlockedItem = { ...item, unlocked: true };
+      cartItems.push(unlockedItem);
       localStorage.setItem('cartItems', JSON.stringify(cartItems));
       window.dispatchEvent(new Event('cartUpdated'));
       alert(`"${item.name}" unlocked and added to your cart.`);
@@ -53,32 +52,48 @@ const Home = () => {
     }
   };
 
-  // Handle item being held (mark it as held and update the vendorItems state)
-  const handleHoldItem = (itemId, pickupTime) => {
-    const updatedItems = vendorItems.map(item =>
-      item.id === itemId ? { ...item, held: true, pickupTime } : item
-    );
-    setVendorItems(updatedItems);
-    localStorage.setItem('vendorItems', JSON.stringify(updatedItems));
-
-    alert(`Item is now held. Pick-up time: ${pickupTime}`);
-  };
-
   return (
     <div className="home-page" style={{ textAlign: 'center', padding: '2rem', marginTop: '80px' }}>
       <img src={logo} alt="oppey logo" style={{ height: '300px', marginBottom: '1rem' }} />
-
-      <div className="search-filter" style={{ marginBottom: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+      
+      <div
+        className="search-filter"
+        style={{
+          marginBottom: '2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '1rem',
+          backgroundColor: '#fff',
+          padding: '1rem',
+          borderRadius: '8px',
+          boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+        }}
+      >
         <input
           type="text"
           placeholder="Search for items..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ padding: '0.5rem', maxWidth: '300px', width: '100%' }}
+          style={{
+            padding: '0.5rem',
+            maxWidth: '300px',
+            width: '100%',
+            border: '1px solid #ccc',
+            borderRadius: '4px'
+          }}
         />
         <div className="quadrant-filter" style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-          {availableQuadrants.map((q) => (
-            <label key={q} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+          {availableQuadrants.map(q => (
+            <label
+              key={q}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                color: '#000' // Ensure quadrant text is visible
+              }}
+            >
               <input
                 type="checkbox"
                 value={q}
@@ -90,14 +105,10 @@ const Home = () => {
           ))}
         </div>
       </div>
-
+      
       <div className="item-list" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem' }}>
         {filteredItems.map(item => (
-          <ItemCard key={item.id} item={item} onUnlock={handleUnlock}>
-            <button onClick={() => handleHoldItem(item.id, prompt("Enter your preferred pick-up time (e.g., 'April 10, 3:00 PM')"))}>
-              Hold Item
-            </button>
-          </ItemCard>
+          <ItemCard key={item.id} item={item} onUnlock={handleUnlock} />
         ))}
       </div>
     </div>
