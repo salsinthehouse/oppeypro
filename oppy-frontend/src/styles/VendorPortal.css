@@ -1,0 +1,147 @@
+/* Container for the entire vendor portal */
+.vendor-portal {
+  max-width: 800px;
+  margin: 80px auto; /* 80px to account for fixed navbar */
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+  background-color: #f7f7f7;
+}
+
+/* Header styles */
+.vendor-portal__header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.vendor-portal__header h2 {
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.vendor-portal__header h3 {
+  margin-bottom: 2rem;
+  color: #555;
+}
+
+/* Items section */
+.vendor-portal__items {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.vendor-portal__items h4 {
+  margin-bottom: 1rem;
+  color: #444;
+  text-align: left;
+}
+
+/* Grid layout for items */
+.vendor-portal__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+/* Item card styling */
+.vendor-portal__item {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.vendor-portal__item h4 {
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+.vendor-portal__item p {
+  color: #555;
+  margin: 0.5rem 0;
+}
+
+.vendor-portal__item img {
+  width: 100%;
+  max-width: 280px;
+  border-radius: 4px;
+  margin: 0.5rem 0;
+}
+
+.vendor-portal__item button {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #ffa24d;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Form title */
+.vendor-portal__form-title {
+  text-align: center;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+/* Container for the add item form */
+.vendor-portal__form-container {
+  display: block;
+  margin: 0 auto 2rem auto;
+  padding: 1rem;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  background: #fafafa;
+  max-width: 500px;
+}
+
+/* Form styling */
+.vendor-portal__form {
+  display: block;
+  text-align: left;
+  width: 100%;
+}
+
+.vendor-portal__form-group {
+  margin-bottom: 1rem;
+}
+
+.vendor-portal__form-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.vendor-portal__form-group input,
+.vendor-portal__form-group textarea,
+.vendor-portal__form-group select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.vendor-portal__form-buttons {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.vendor-portal__form-buttons button {
+  padding: 0.5rem 1rem;
+  background-color: #ffa24d;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0 0.5rem;
+}
+
+/* Empty state message */
+.vendor-portal__empty {
+  color: #777;
+  text-align: center;
+}
