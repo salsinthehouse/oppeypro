@@ -1,0 +1,86 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #ffa24d; /* Bright orange */
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  color: #fff;
+}
+
+.navbar__logo,
+.navbar__links {
+  display: flex;
+  align-items: center;
+}
+
+.navbar__brand {
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  margin-right: 1rem;
+}
+
+.navbar__link {
+  color: #fff;
+  text-decoration: none;
+  margin-right: 1rem;
+}
+
+.navbar__store-title {
+  color: #fff;
+  margin-right: 1rem;
+  font-weight: bold;
+}
+
+.navbar__menu {
+  position: relative;
+}
+
+.navbar__burger {
+  width: 30px !important;
+  height: 24px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+.burger-line {
+  width: 100% !important;
+  height: 4px !important;
+  background-color: #fff !important;
+  margin: 2px 0 !important;
+}
+
+.navbar__dropdown {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 150px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+}
+
+.navbar__dropdown-item {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: #333; /* Dark text in dropdown */
+  text-decoration: none;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.navbar__dropdown-item:hover {
+  background-color: #ffe6d0; /* Light orange/peach on hover */
+}
