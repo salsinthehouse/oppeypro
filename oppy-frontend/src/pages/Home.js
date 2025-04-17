@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ItemCard from '../components/ItemCard';
+import RevealStatus from '../components/RevealStatus';
 import logo from '../assets/logo.png';
 
 const availableQuadrants = ['Central', 'North', 'South', 'East', 'West'];
@@ -55,7 +56,9 @@ const Home = () => {
   return (
     <div className="home-page" style={{ textAlign: 'center', padding: '2rem', marginTop: '80px' }}>
       <img src={logo} alt="oppey logo" style={{ height: '300px', marginBottom: '1rem' }} />
-      
+
+      <RevealStatus />
+
       <div
         className="search-filter"
         style={{
@@ -91,7 +94,7 @@ const Home = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.25rem',
-                color: '#000' // Ensure quadrant text is visible
+                color: '#000'
               }}
             >
               <input
@@ -105,7 +108,7 @@ const Home = () => {
           ))}
         </div>
       </div>
-      
+
       <div className="item-list" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem' }}>
         {filteredItems.map(item => (
           <ItemCard key={item.id} item={item} onUnlock={handleUnlock} />

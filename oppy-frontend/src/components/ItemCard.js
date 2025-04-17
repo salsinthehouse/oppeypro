@@ -1,73 +1,49 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 
-const ItemCard = ({ item, onUnlock }) => {
-  const [locationUnlocked, setLocationUnlocked] = useState(false);
+const ItemCard = ({ item }) => {
+  const [location, setLocation] = useState(item.location);
+  const [error, setError] = useState('');
+  const [revealed, setRevealed] = useState(!!item.location);
 
-  const handleUnlock = () => {
-    setLocationUnlocked(true);
-    if (onUnlock) {
-      onUnlock(item);
+  const handleReveal = async () => {
+    setError('');
+
+    try {
+      const token = localStorage.getItem('customerAccessToken');
+
+      const res = await fetch(`http://localhost:5000/api/items/${item._id}/reveal`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setLocation(data.location);
+        setRevealed(true);
+      } else {
+        setError(data.message || 'Unable to reveal location.');
+      }
+    } catch (err) {
+      setError('Failed to contact server.');
     }
   };
 
   return (
-    <div
-      className="item-card"
-      style={{
-        border: '1px solid #ddd',
-        padding: '1rem',
-        margin: '1rem',
-        width: '300px',
-        borderRadius: '8px',
-        boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-      }}
-    >
-      <img
-        src={item.imageUrl}
-        alt={item.name}
-        style={{ width: '100%', borderRadius: '4px' }}
-      />
+    <div className="item-card">
       <h3>{item.name}</h3>
       <p>{item.description}</p>
-      <p><strong>Shop:</strong> {item.shop}</p>
-      
-      {locationUnlocked ? (
-        <p><strong>Location:</strong> {item.location}</p>
+      <p>${item.price}</p>
+
+      {revealed ? (
+        <p><strong>Location:</strong> {location}</p>
       ) : (
-        <>
-          <p><em>Store location is locked.</em></p>
-          <button
-            onClick={handleUnlock}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#fff',
-              color: '#ffa24d',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Unlock Store Location for $X
-          </button>
-        </>
+        <button onClick={handleReveal}>Reveal Location</button>
       )}
-      
-      <Link
-        to={`/items/${item.id}`}
-        style={{
-          display: 'block',
-          textAlign: 'center',
-          padding: '0.5rem',
-          backgroundColor: '#ffa24d',
-          color: '#fff',
-          borderRadius: '4px',
-          textDecoration: 'none',
-          marginTop: '0.5rem'
-        }}
-      >
-        View Details
-      </Link>
+
+      {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
   );
 };

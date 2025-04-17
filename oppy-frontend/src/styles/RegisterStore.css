@@ -1,71 +1,62 @@
 .register-store {
-    max-width: 500px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background-color: #fafafa;
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    font-family: Arial, sans-serif;
-  }
-  
-  .register-store h2 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 1.5rem;
-  }
-  
-  .register-store__form-group {
-    margin-bottom: 1rem;
-  }
-  
-  .register-store__form-group label {
-    display: block;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 0.5rem;
-  }
-  
-  .register-store__form-group input,
-  .register-store__form-group textarea {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  .register-store__form-group textarea {
-    resize: vertical;
-    min-height: 80px;
-  }
-  
-  .register-store__form-buttons {
-    text-align: center;
-    margin-top: 1rem;
-  }
-  
-  .register-store__form-buttons button {
-    padding: 0.5rem 1rem;
-    background-color: #ffa24d;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .register-store__confirmation {
-    text-align: center;
-    padding: 2rem;
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    background-color: #fafafa;
-  }
-  
-  .register-store__confirmation h2 {
-    color: #333;
-    margin-bottom: 1rem;
-  }
-  
-  .register-store__confirmation p {
-    color: #555;
-  }
-  
+  max-width: 400px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.register-store h2 {
+  margin-bottom: 1.5rem;
+  color: #ff7a00; /* your orange theme */
+  font-size: 1.8rem;
+}
+
+.register-store form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.register-store input {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.register-store input:focus {
+  border-color: #ff7a00;
+  outline: none;
+}
+
+.register-store button {
+  background-color: #ff7a00;
+  color: white;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.register-store button:hover {
+  background-color: #e06c00;
+}
+
+.register-store .error {
+  color: #d8000c;
+  background: #ffd2d2;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+.register-store .success {
+  color: #270;
+  background: #dff2bf;
+  padding: 0.5rem;
+  border-radius: 6px;
+}

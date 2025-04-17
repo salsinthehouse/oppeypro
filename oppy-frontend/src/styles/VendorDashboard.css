@@ -1,0 +1,29 @@
+.vendor-dashboard {
+    max-width: 600px;
+    margin: 3rem auto;
+    padding: 2rem;
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .vendor-dashboard h2 {
+    color: #ff7a00;
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+  }
+  
+  .vendor-info p {
+    font-size: 1.1rem;
+    margin: 0.75rem 0;
+  }
+  
+  .vendor-dashboard .error {
+    color: #d8000c;
+    background: #ffd2d2;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+  }
+  

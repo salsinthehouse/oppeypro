@@ -1,58 +1,34 @@
 .vendor-login {
-    max-width: 400px;
-    margin: 80px auto; /* Leaves space at the top for a fixed navbar */
-    padding: 2rem;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    text-align: center;
-    font-family: Arial, sans-serif;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .vendor-login h2 {
-    color: #000;
-    margin-bottom: 1.5rem;
-  }
-  
-  .vendor-login__form {
-    margin-bottom: 1.5rem;
-    text-align: left;
-  }
-  
-  .vendor-login__form-group {
-    margin-bottom: 1rem;
-  }
-  
-  .vendor-login__form-group label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    color: #000;
-  }
-  
-  .vendor-login__form-group input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    color: #000;
-  }
-  
-  .vendor-login__button {
-    width: 100%;
-    padding: 0.75rem;
-    background-color: #ffa24d;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-    margin-top: 1rem;
-  }
-  
-  .vendor-login__error {
-    color: red;
-    margin-bottom: 1rem;
-  }
-  
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.vendor-login h2 {
+  text-align: center;
+}
+
+.vendor-login input {
+  display: block;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  font-size: 16px;
+}
+
+.vendor-login button {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: #ffa24d;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+}
+
+.vendor-login .error {
+  color: red;
+  margin-top: 10px;
+}

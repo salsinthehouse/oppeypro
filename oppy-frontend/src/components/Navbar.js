@@ -1,87 +1,60 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import CartIcon from './CartIcon'; // Ensure you have this component
 import '../styles/Navbar.css';
 
 const Navbar = () => {
-  const vendorLoggedIn = localStorage.getItem('vendorLoggedIn') === 'true';
-  const customerLoggedIn = localStorage.getItem('customerLoggedIn') === 'true';
-  const vendorStoreName = localStorage.getItem('vendorStoreName') || '';
-  const customerName = localStorage.getItem('customerName') || '';
+  const vendorLoggedIn = !!localStorage.getItem('vendorAccessToken');
+  const customerLoggedIn = !!localStorage.getItem('customerAccessToken');
+  const vendorEmail = localStorage.getItem('vendorEmail');
+  const customerEmail = localStorage.getItem('customerEmail');
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
-    if (vendorLoggedIn) {
-      localStorage.removeItem('vendorLoggedIn');
-      localStorage.removeItem('vendorStoreName');
-    }
-    if (customerLoggedIn) {
-      localStorage.removeItem('customerLoggedIn');
-      localStorage.removeItem('customerName');
-    }
+    localStorage.removeItem('vendorAccessToken');
+    localStorage.removeItem('vendorEmail');
+    localStorage.removeItem('customerAccessToken');
+    localStorage.removeItem('customerEmail');
     navigate('/');
     window.location.reload();
-  };
-
-  const handleMenuToggle = () => {
-    setMenuOpen(!menuOpen);
   };
 
   return (
     <nav className="navbar">
       <div className="navbar__logo">
-        <Link to="/" className="navbar__brand">OPPEY</Link>
+        <Link to="/" className="navbar__brand">OPPY</Link>
       </div>
+
       <div className="navbar__links">
-        {vendorLoggedIn ? (
+        <Link to="/" className="navbar__link">Home</Link>
+        <Link to="/cart" className="navbar__link">Cart</Link>
+
+        {vendorLoggedIn && (
           <>
-            <span className="navbar__store-title">{vendorStoreName}</span>
-            <div className="navbar__menu">
-              <div className="navbar__burger" onClick={handleMenuToggle}>
-                <div className="burger-line"></div>
-                <div className="burger-line"></div>
-                <div className="burger-line"></div>
-              </div>
-              {menuOpen && (
-                <div className="navbar__dropdown">
-                  <Link to="/account" className="navbar__dropdown-item" onClick={() => setMenuOpen(false)}>My Account</Link>
-                  <Link to="/vendor" className="navbar__dropdown-item" onClick={() => setMenuOpen(false)}>Dashboard</Link>
-                  <Link to="/settings" className="navbar__dropdown-item" onClick={() => setMenuOpen(false)}>Settings</Link>
-                  <button className="navbar__dropdown-item" onClick={handleLogout}>Log Out</button>
-                </div>
-              )}
-            </div>
-          </>
-        ) : customerLoggedIn ? (
-          <>
-            <span className="navbar__store-title">{customerName}</span>
-            <div className="navbar__menu">
-              <div className="navbar__burger" onClick={handleMenuToggle}>
-                <div className="burger-line"></div>
-                <div className="burger-line"></div>
-                <div className="burger-line"></div>
-              </div>
-              {menuOpen && (
-                <div className="navbar__dropdown">
-                  <Link to="/account" className="navbar__dropdown-item" onClick={() => setMenuOpen(false)}>My Account</Link>
-                  <Link to="/customer-dashboard" className="navbar__dropdown-item" onClick={() => setMenuOpen(false)}>Dashboard</Link>
-                  <Link to="/settings" className="navbar__dropdown-item" onClick={() => setMenuOpen(false)}>Account Settings</Link>
-                  <button className="navbar__dropdown-item" onClick={handleLogout}>Log Off</button>
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            <Link to="/login/customer" className="navbar__link">Login as Customer</Link>
-            <Link to="/login/vendor" className="navbar__link">Login as Vendor</Link>
-            <Link to="/register/store" className="navbar__link">Register as Store</Link>
+            <span className="navbar__store-title">
+              Welcome, {vendorEmail}
+            </span>
+            <Link to="/vendor/dashboard" className="navbar__link">Dashboard</Link>
+            <button onClick={handleLogout} className="navbar__link">Logout</button>
           </>
         )}
-        <div className="cart-icon-wrapper">
-          <CartIcon />
-        </div>
+
+        {customerLoggedIn && !vendorLoggedIn && (
+          <>
+            <span className="navbar__store-title">
+              Welcome, {customerEmail}
+            </span>
+            <button onClick={handleLogout} className="navbar__link">Logout</button>
+          </>
+        )}
+
+        {!vendorLoggedIn && !customerLoggedIn && (
+          <>
+            <Link to="/login/customer" className="navbar__link">Customer Login</Link>
+            <Link to="/register/customer" className="navbar__link">Register</Link>
+            <Link to="/login/vendor" className="navbar__link">Vendor Login</Link>
+            <Link to="/register/store" className="navbar__link">Register Store</Link>
+          </>
+        )}
       </div>
     </nav>
   );
