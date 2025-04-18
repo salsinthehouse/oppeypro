@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import ItemCard from '../components/ItemCard';
 import RevealStatus from '../components/RevealStatus';
 import logo from '../assets/logo.png';
@@ -10,15 +11,20 @@ const Home = () => {
   const [selectedQuadrants, setSelectedQuadrants] = useState([]);
   const [vendorItems, setVendorItems] = useState([]);
 
-  // Load vendor items from localStorage (if any)
+  // ✅ Load vendor items from backend
   useEffect(() => {
-    const storedVendorItems = localStorage.getItem('vendorItems');
-    if (storedVendorItems) {
-      setVendorItems(JSON.parse(storedVendorItems));
-    }
+    const fetchItems = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/items`);
+        setVendorItems(response.data);
+      } catch (error) {
+        console.error('Failed to fetch items:', error);
+      }
+    };
+
+    fetchItems();
   }, []);
 
-  // Filter items based on search term, quadrant selection, and only active items are shown
   const filteredItems = vendorItems.filter(item => {
     const lowerSearch = searchTerm.toLowerCase();
     const matchesSearch =
@@ -29,8 +35,6 @@ const Home = () => {
     return (!item.status || item.status === 'active') && matchesSearch && matchesQuadrant;
   });
 
-  // Unlock function: add the item to cart without updating vendorItems status.
-  // The item remains visible on Home until the customer confirms the hold in the Cart.
   const handleUnlock = (item) => {
     let cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
     if (!cartItems.find(i => i.id === item.id)) {

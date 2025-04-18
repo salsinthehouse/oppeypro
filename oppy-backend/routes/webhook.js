@@ -21,7 +21,7 @@ router.post('/', express.raw({ type: 'application/json' }), async (req, res) => 
   console.log('📩 Stripe webhook hit!');
   console.log('🔔 Event type:', event.type);
 
-  // ✅ Handle the event
+  // ✅ Handle subscription success
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const stripeCustomerId = session.customer;
@@ -50,8 +50,12 @@ router.post('/', express.raw({ type: 'application/json' }), async (req, res) => 
     } catch (dbError) {
       console.error('❌ Failed to save subscription to MongoDB:', dbError.message);
     }
+  } else {
+    // ✅ Log unhandled event types
+    console.log(`⚠️ Unhandled event type: ${event.type}`);
   }
 
+  // ✅ Acknowledge Stripe event (must be outside of if/else)
   res.status(200).json({ received: true });
 });
 

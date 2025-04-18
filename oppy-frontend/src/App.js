@@ -18,15 +18,22 @@ import RequireAuth from './components/RequireAuth';
 import ConfirmAccount from './pages/ConfirmAccount';
 
 import VendorDashboard from './pages/VendorDashboard';
+import SubscribePage from './pages/SubscribePage';
 
 function App() {
   return (
     <Router>
       <Navbar />
       <Routes>
+
         {/* Public */}
         <Route path="/" element={<Home />} />
         <Route path="/cart" element={<Cart />} />
+
+        {/* Subscription */}
+        <Route path="/subscribe" element={<SubscribePage />} />
+        <Route path="/subscribe-success" element={<h2>✅ Subscription successful!</h2>} />
+        <Route path="/subscribe-cancel" element={<h2>❌ Subscription cancelled.</h2>} />
 
         {/* Customer */}
         <Route path="/login/customer" element={<CustomerLogin />} />
