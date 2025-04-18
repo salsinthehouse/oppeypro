@@ -1,23 +1,31 @@
-// File: server.js
-
+// Required modules
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+require('dotenv').config();  // Load environment variables
 const connectDB = require('./db');
 const mongoose = require('mongoose');
+
+// Ensure the Stripe secret key exists in .env
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error('❌ STRIPE_SECRET_KEY not defined in .env');
+  process.exit(1);  // Exit if Stripe secret key is not found
+}
+
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
+
+// ✅ CORS Middleware (ensure CORS is set up before the other routes)
+app.use(cors());
+
+// ✅ Middleware to parse JSON body
+app.use(express.json());
 
 // ✅ Stripe webhook route (must be added BEFORE express.json)
 const stripeWebhook = require('./routes/stripeWebhook');
 app.use('/webhook', stripeWebhook); // Use only this for webhooks
 
-// ✅ Middleware
-app.use(cors());
-app.use(express.json()); // JSON parser AFTER webhook
-
-// ✅ Logger
+// ✅ Logger Middleware for API requests
 app.use((req, res, next) => {
   console.log(`➡️  ${req.method} ${req.originalUrl}`);
   next();
@@ -61,14 +69,19 @@ app.get('/api/test-stripe', async (req, res) => {
 // 🔎 Debug: Check DB connection status
 console.log('🔎 DB Status:', mongoose.connection.readyState);
 
-// ✅ Start server after DB connects
+// ✅ Start the server after DB connects
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
-  await connectDB();
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-  });
+  try {
+    await connectDB();  // Ensure the database connection is established before starting the server
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error('❌ Failed to connect to the database:', err.message);
+    process.exit(1);  // Exit if DB connection fails
+  }
 };
 
 startServer();
