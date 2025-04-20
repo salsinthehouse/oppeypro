@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import '../styles/Cart.css';
 
 const Cart = () => {
+  const BASE_URL = process.env.REACT_APP_API_BASE;
   const [cartItems, setCartItems] = useState(() => JSON.parse(localStorage.getItem('cartItems')) || []);
   const [subscription, setSubscription] = useState(() => localStorage.getItem('subscription') === 'true');
 
@@ -26,7 +28,7 @@ const Cart = () => {
     window.dispatchEvent(new Event('vendorItemsUpdated'));
   };
 
-  const handleHoldItem = (itemId) => {
+  const handleHoldItem = async (itemId) => {
     const pickupTime = prompt("Please enter your preferred pick-up time (e.g., 'April 10, 3:00 PM'):");
     if (!pickupTime) return;
 
@@ -42,6 +44,16 @@ const Cart = () => {
     localStorage.setItem('vendorItems', JSON.stringify(updatedVendorItems));
     window.dispatchEvent(new Event('vendorItemsUpdated'));
 
+    // (Optional) Send hold update to backend
+    try {
+      await axios.post(`${BASE_URL}/cart/hold`, {
+        itemId,
+        pickupTime
+      });
+    } catch (err) {
+      console.error('Failed to notify backend:', err);
+    }
+
     alert(`Hold confirmed. Your pick-up time is set to: ${pickupTime}`);
   };
 
@@ -52,7 +64,7 @@ const Cart = () => {
   return (
     <div className="cart-page">
       <h2>Your Cart</h2>
-      
+
       <div className="cart-subscription">
         <label>
           <input
@@ -63,7 +75,7 @@ const Cart = () => {
           Subscribe for $2.00/month for unlimited unlocks
         </label>
       </div>
-      
+
       <div className="cart-items">
         {cartItems.length === 0 ? (
           <p>Your cart is empty. Unlock an item to add it here!</p>
@@ -91,7 +103,7 @@ const Cart = () => {
           ))
         )}
       </div>
-      
+
       <div className="cart-checkout">
         <button onClick={handlePaymentDetails}>Enter Payment Details and Checkout</button>
       </div>

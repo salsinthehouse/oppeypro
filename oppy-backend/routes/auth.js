@@ -35,6 +35,7 @@ router.post('/register', async (req, res) => {
   }
 
   try {
+    // Sign up
     const signupCommand = new SignUpCommand({
       ClientId: process.env.COGNITO_CLIENT_ID,
       Username: email,
@@ -44,6 +45,7 @@ router.post('/register', async (req, res) => {
 
     const signupResponse = await cognito.send(signupCommand);
 
+    // Optionally auto-assign group (only for customers — vendors require approval)
     if (userType === 'customer') {
       const groupCommand = new AdminAddUserToGroupCommand({
         GroupName: 'customers',
@@ -57,7 +59,7 @@ router.post('/register', async (req, res) => {
     res.json({
       message:
         userType === 'vendor'
-          ? 'Vendor registration successful. Awaiting approval.'
+          ? 'Vendor registration successful. Awaiting admin approval.'
           : 'Customer registration successful. Added to customer group.',
       data: signupResponse
     });
@@ -74,13 +76,13 @@ router.post('/register', async (req, res) => {
 router.post('/confirm', async (req, res) => {
   const { email, code } = req.body;
 
-  const command = new ConfirmSignUpCommand({
-    ClientId: process.env.COGNITO_CLIENT_ID,
-    Username: email,
-    ConfirmationCode: code
-  });
-
   try {
+    const command = new ConfirmSignUpCommand({
+      ClientId: process.env.COGNITO_CLIENT_ID,
+      Username: email,
+      ConfirmationCode: code
+    });
+
     const response = await cognito.send(command);
     res.json({ message: 'Account confirmed successfully.', data: response });
   } catch (error) {
@@ -95,12 +97,12 @@ router.post('/confirm', async (req, res) => {
 router.post('/resend', async (req, res) => {
   const { email } = req.body;
 
-  const command = new ResendConfirmationCodeCommand({
-    ClientId: process.env.COGNITO_CLIENT_ID,
-    Username: email
-  });
-
   try {
+    const command = new ResendConfirmationCodeCommand({
+      ClientId: process.env.COGNITO_CLIENT_ID,
+      Username: email
+    });
+
     const response = await cognito.send(command);
     res.json({ message: 'Confirmation code resent.', data: response });
   } catch (error) {
@@ -115,16 +117,16 @@ router.post('/resend', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
-  const command = new InitiateAuthCommand({
-    AuthFlow: 'USER_PASSWORD_AUTH',
-    ClientId: process.env.COGNITO_CLIENT_ID,
-    AuthParameters: {
-      USERNAME: email,
-      PASSWORD: password
-    }
-  });
-
   try {
+    const command = new InitiateAuthCommand({
+      AuthFlow: 'USER_PASSWORD_AUTH',
+      ClientId: process.env.COGNITO_CLIENT_ID,
+      AuthParameters: {
+        USERNAME: email,
+        PASSWORD: password
+      }
+    });
+
     const response = await cognito.send(command);
 
     const { IdToken, AccessToken, RefreshToken } = response.AuthenticationResult;
@@ -139,7 +141,12 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(401).json({ message: 'Login failed', error: error.message });
+    res.status(401).json({
+      message: 'Login failed',
+      error: error.message.includes('User is not confirmed')
+        ? 'Please confirm your email first.'
+        : error.message
+    });
   }
 });
 
@@ -149,12 +156,12 @@ router.post('/login', async (req, res) => {
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
 
-  const command = new ForgotPasswordCommand({
-    ClientId: process.env.COGNITO_CLIENT_ID,
-    Username: email
-  });
-
   try {
+    const command = new ForgotPasswordCommand({
+      ClientId: process.env.COGNITO_CLIENT_ID,
+      Username: email
+    });
+
     const response = await cognito.send(command);
     res.json({ message: 'Password reset code sent to email.', data: response });
   } catch (error) {
@@ -169,14 +176,14 @@ router.post('/forgot-password', async (req, res) => {
 router.post('/confirm-forgot-password', async (req, res) => {
   const { email, code, newPassword } = req.body;
 
-  const command = new ConfirmForgotPasswordCommand({
-    ClientId: process.env.COGNITO_CLIENT_ID,
-    Username: email,
-    ConfirmationCode: code,
-    Password: newPassword
-  });
-
   try {
+    const command = new ConfirmForgotPasswordCommand({
+      ClientId: process.env.COGNITO_CLIENT_ID,
+      Username: email,
+      ConfirmationCode: code,
+      Password: newPassword
+    });
+
     const response = await cognito.send(command);
     res.json({ message: 'Password reset successful.', data: response });
   } catch (error) {

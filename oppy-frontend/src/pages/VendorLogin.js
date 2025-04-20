@@ -1,74 +1,24 @@
-// File: src/pages/VendorLogin.js
+// File: src/pages/VendorLoginRedirect.js
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../styles/VendorLogin.css';
+import React, { useEffect } from 'react';
 
-const VendorLogin = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+const VendorLoginRedirect = () => {
+  useEffect(() => {
+    // ✅ Replace the placeholders below with your actual values
+    const COGNITO_DOMAIN = 'https://oppy.auth.ap-southeast-2.amazoncognito.com';
+    const CLIENT_ID = '5jf5h16hat2fcju90p0r2tjd6k';
+    const REDIRECT_URI = 'http://localhost:3000/vendor/callback'; // Make sure this matches your Cognito App Client callback URL
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
+    const loginUrl = `${COGNITO_DOMAIN}/login?client_id=${CLIENT_ID}&response_type=code&scope=email+openid+profile&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
 
-    try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
-
-      const accessToken = data?.tokens?.AccessToken;
-      if (!accessToken) {
-        throw new Error('No access token received.');
-      }
-
-      localStorage.setItem('vendorAccessToken', accessToken);
-      localStorage.setItem('vendorEmail', email);
-
-      navigate('/vendor/dashboard');
-    } catch (err) {
-      console.error('Vendor login error:', err);
-      setError(err.message || 'Something went wrong. Please try again.');
-    }
-  };
+    window.location.href = loginUrl;
+  }, []);
 
   return (
-    <div className="vendor-login">
-      <h2>Vendor Login</h2>
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-
-        <button type="submit">Login</button>
-        {error && <p className="error">{error}</p>}
-      </form>
+    <div style={{ padding: '2rem', textAlign: 'center' }}>
+      <p>Redirecting to secure vendor login...</p>
     </div>
   );
 };
 
-export default VendorLogin;
+export default VendorLoginRedirect;

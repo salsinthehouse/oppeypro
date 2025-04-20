@@ -1,29 +1,40 @@
 .vendor-dashboard {
-    max-width: 600px;
-    margin: 3rem auto;
-    padding: 2rem;
-    background-color: #fff;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    text-align: center;
-  }
-  
-  .vendor-dashboard h2 {
-    color: #ff7a00;
-    margin-bottom: 1rem;
-    font-size: 1.8rem;
-  }
-  
-  .vendor-info p {
-    font-size: 1.1rem;
-    margin: 0.75rem 0;
-  }
-  
-  .vendor-dashboard .error {
-    color: #d8000c;
-    background: #ffd2d2;
-    padding: 0.75rem;
-    border-radius: 8px;
-    margin-top: 1rem;
-  }
-  
+  padding: 2rem;
+  max-width: 800px;
+  margin: auto;
+}
+
+.item-form input,
+.item-form textarea {
+  display: block;
+  margin-bottom: 1rem;
+  width: 100%;
+  padding: 8px;
+}
+
+.item-form button {
+  padding: 10px 20px;
+  background-color: #ffa24d;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.item-card {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #fff9f2;
+  border-radius: 6px;
+}
+
+.item-card img {
+  display: block;
+  margin-top: 8px;
+  border-radius: 4px;
+}
+
+.message {
+  color: #e67e22;
+  font-weight: bold;
+}
