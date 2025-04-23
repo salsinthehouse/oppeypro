@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ItemCard from '../components/ItemCard';
 import RevealStatus from '../components/RevealStatus';
-import logo from '../assets/logo.png';
+import Navbar from '../components/Navbar';
+import '../styles/Home.css';
 
 const availableQuadrants = ['Central', 'North', 'South', 'East', 'West'];
 
@@ -11,17 +12,15 @@ const Home = () => {
   const [selectedQuadrants, setSelectedQuadrants] = useState([]);
   const [vendorItems, setVendorItems] = useState([]);
 
-  // ✅ Load vendor items from backend
   useEffect(() => {
     const fetchItems = async () => {
       try {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/items`);
         setVendorItems(response.data);
       } catch (error) {
-        console.error('Failed to fetch items:', error);
+        console.error('❌ Failed to fetch items:', error);
       }
     };
-
     fetchItems();
   }, []);
 
@@ -50,75 +49,94 @@ const Home = () => {
 
   const handleQuadrantChange = (e) => {
     const { value, checked } = e.target;
-    if (checked) {
-      setSelectedQuadrants([...selectedQuadrants, value]);
-    } else {
-      setSelectedQuadrants(selectedQuadrants.filter(q => q !== value));
+    setSelectedQuadrants(prev =>
+      checked ? [...prev, value] : prev.filter(q => q !== value)
+    );
+  };
+
+  const handleSubscribe = async () => {
+    const token = localStorage.getItem('customerToken');
+    console.log('📦 customerToken:', token); // ✅ Debug log
+
+    if (!token) {
+      const confirm = window.confirm('You must be logged in as a customer to subscribe. Go to login?');
+      if (confirm) window.location.href = '/login/customer';
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/subscribe`,
+        { tier: 2 },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (res.data.url) {
+        console.log('✅ Redirecting to Stripe:', res.data.url);
+        window.location.href = res.data.url;
+      } else {
+        alert('Subscription failed. No Stripe checkout link returned.');
+      }
+    } catch (err) {
+      console.error('❌ Stripe subscription error:', err.response || err.message);
+      alert('Error starting subscription. Check console.');
     }
   };
 
   return (
-    <div className="home-page" style={{ textAlign: 'center', padding: '2rem', marginTop: '80px' }}>
-      <img src={logo} alt="oppey logo" style={{ height: '300px', marginBottom: '1rem' }} />
+    <>
+      <Navbar />
 
-      <RevealStatus />
+      <div className="home-container">
+        <div className="home-header">
+          <h1>Discover Hidden Treasures Near You</h1>
+          <p>Search second-hand items from trusted local op shops.</p>
+          <button className="cta-button" onClick={handleSubscribe}>
+            Subscribe Now
+          </button>
+        </div>
 
-      <div
-        className="search-filter"
-        style={{
-          marginBottom: '2rem',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '1rem',
-          backgroundColor: '#fff',
-          padding: '1rem',
-          borderRadius: '8px',
-          boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-        }}
-      >
-        <input
-          type="text"
-          placeholder="Search for items..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            padding: '0.5rem',
-            maxWidth: '300px',
-            width: '100%',
-            border: '1px solid #ccc',
-            borderRadius: '4px'
-          }}
-        />
-        <div className="quadrant-filter" style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-          {availableQuadrants.map(q => (
-            <label
-              key={q}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                color: '#000'
-              }}
-            >
-              <input
-                type="checkbox"
-                value={q}
-                onChange={handleQuadrantChange}
-                checked={selectedQuadrants.includes(q)}
-              />
-              {q}
-            </label>
-          ))}
+        <RevealStatus />
+
+        <div className="search-filter">
+          <input
+            type="text"
+            placeholder="Search for items..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <div className="quadrant-filter">
+            {availableQuadrants.map(q => (
+              <label key={q}>
+                <input
+                  type="checkbox"
+                  value={q}
+                  onChange={handleQuadrantChange}
+                  checked={selectedQuadrants.includes(q)}
+                />
+                {q}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="item-list">
+          {filteredItems.length > 0 ? (
+            filteredItems.map(item => (
+              <ItemCard key={item.id} item={item} onUnlock={handleUnlock} />
+            ))
+          ) : (
+            <p className="empty-message">
+              No items found. Try adjusting your search or filters.
+            </p>
+          )}
         </div>
       </div>
-
-      <div className="item-list" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem' }}>
-        {filteredItems.map(item => (
-          <ItemCard key={item.id} item={item} onUnlock={handleUnlock} />
-        ))}
-      </div>
-    </div>
+    </>
   );
 };
 

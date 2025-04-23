@@ -25,6 +25,9 @@ import CustomerLoginRedirect from './pages/CustomerLoginRedirect';
 import CustomerCallback from './pages/CustomerCallback';
 import CustomerDashboard from './pages/CustomerDashboard';
 
+import CustomerHolds from './pages/CustomerHolds';
+
+
 function AppWrapper() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -46,6 +49,10 @@ function AppWrapper() {
         <Route path="/subscribe" element={<SubscribePage />} />
         <Route path="/subscribe-success" element={<h2>✅ Subscription successful!</h2>} />
         <Route path="/subscribe-cancel" element={<h2>❌ Subscription cancelled.</h2>} />
+
+        <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+
+        <Route path="/my-holds" element={<CustomerHolds />} />
 
         {/* Admin */}
         <Route

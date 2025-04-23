@@ -1,28 +1,51 @@
-// File: models/Item.js
-const mongoose = require('mongoose');
+const express = require('express');
+const router = express.Router();
+const Item = require('../models/Item');
 
-const itemSchema = new mongoose.Schema({
-  vendorId: { type: String, required: true }, // You may change this to ObjectId later for referencing
-  itemNumber: { type: Number, required: true }, // 1–30 per vendor
-  name: { type: String, required: true },
-  description: { type: String, default: '' },
-  price: { type: Number, default: 0 },
-  images: { type: [String], default: [] }, // Array of image URLs
-  location: { type: String, default: '' }, // Will remain hidden from customers unless purchased/unlocked
-  active: { type: Boolean, default: true },
-
-  // Item held status
-  heldBy: { type: String, default: null }, // customerId (optional)
-  holdExpiresAt: { type: Date, default: null },
-
-  // Simple analytics
-  views: { type: Number, default: 0 },
-  clicks: { type: Number, default: 0 },
-
-  createdAt: { type: Date, default: Date.now }
+// Get all items for a specific vendor
+router.get('/vendor/:vendorId', async (req, res) => {
+  try {
+    const items = await Item.find({ vendorId: req.params.vendorId });
+    res.json(items);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch vendor items' });
+  }
 });
 
-// Ensure uniqueness of itemNumber per vendor
-itemSchema.index({ vendorId: 1, itemNumber: 1 }, { unique: true });
+// Create a new item
+router.post('/', async (req, res) => {
+  try {
+    const {
+      vendorId,
+      name,
+      description,
+      price,
+      images,
+      location
+    } = req.body;
 
-module.exports = mongoose.model('Item', itemSchema);
+    // Count items to assign a number
+    const itemCount = await Item.countDocuments({ vendorId });
+    if (itemCount >= 30) {
+      return res.status(400).json({ error: 'Maximum item limit reached (30)' });
+    }
+
+    const newItem = new Item({
+      vendorId,
+      itemNumber: itemCount + 1,
+      name,
+      description,
+      price,
+      images,
+      location
+    });
+
+    await newItem.save();
+    res.status(201).json(newItem);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create item' });
+  }
+});
+
+module.exports = router;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 
 const VendorDashboard = () => {
@@ -8,93 +8,190 @@ const VendorDashboard = () => {
     description: '',
     price: '',
     location: '',
-    images: ''
+    images: '',
+    _id: null, // null = add mode
   });
   const [message, setMessage] = useState('');
 
   const token = localStorage.getItem('vendorToken');
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const res = await axios.get('/api/vendor/items', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setItems(res.data);
-      } catch (err) {
-        console.error('Error fetching items:', err);
-      }
-    };
-
-    fetchItems();
+  const fetchItems = useCallback(async () => {
+    try {
+      const res = await axios.get('/api/vendors/items', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setItems(res.data);
+    } catch (err) {
+      console.error('❌ Error fetching items:', err);
+    }
   }, [token]);
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleDelete = async (itemId) => {
+    if (!window.confirm('Are you sure you want to delete this item?')) return;
     try {
-      const payload = {
-        ...formData,
-        price: parseFloat(formData.price),
-        images: formData.images.split(',').map((img) => img.trim())
-      };
-
-      const res = await axios.post('/api/vendor/items', payload, {
-        headers: { Authorization: `Bearer ${token}` }
+      await axios.delete(`/api/vendors/items/${itemId}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      setMessage(res.data.message);
-      setFormData({ name: '', description: '', price: '', location: '', images: '' });
-
-      const refreshedItems = await axios.get('/api/vendor/items', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setItems(refreshedItems.data);
+      setMessage('🗑 Item deleted');
+      fetchItems();
     } catch (err) {
-      console.error('Error uploading item:', err);
-      setMessage(err.response?.data?.message || 'Error uploading item');
+      console.error('Delete error:', err);
+      setMessage('❌ Failed to delete item');
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const imagesArray = formData.images
+      .split(',')
+      .map((img) => img.trim())
+      .filter((img) => img);
+
+    const payload = {
+      name: formData.name,
+      description: formData.description,
+      price: parseFloat(formData.price),
+      location: formData.location,
+      images: imagesArray,
+    };
+
+    try {
+      if (formData._id) {
+        // Edit item
+        await axios.put(`/api/vendors/items/${formData._id}`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setMessage('✏️ Item updated successfully');
+      } else {
+        // Create new item
+        await axios.post('/api/vendors/items', payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setMessage('✅ Item added successfully');
+      }
+
+      // Clear form and refresh
+      setFormData({ name: '', description: '', price: '', location: '', images: '', _id: null });
+      fetchItems();
+    } catch (err) {
+      console.error('Submit error:', err);
+      setMessage('❌ Failed to save item');
+    }
+  };
+
+  const handleEdit = (item) => {
+    setFormData({
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      location: item.location,
+      images: item.images.join(', '),
+      _id: item._id,
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <div className="vendor-dashboard" style={{ padding: '2rem', maxWidth: '800px', margin: 'auto' }}>
-      <h2>📦 Vendor Dashboard</h2>
+    <div className="max-w-3xl mx-auto p-6">
+      <h2 className="text-2xl font-bold mb-4">📦 Vendor Dashboard</h2>
 
-      {message && <p style={{ color: 'green' }}>{message}</p>}
+      {message && <p className="text-green-600 font-medium mb-4">{message}</p>}
 
-      {items.length < 30 ? (
-        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
-          <h3>Add New Item</h3>
-          <input type="text" name="name" placeholder="Item Name" value={formData.name} onChange={handleChange} required />
-          <textarea name="description" placeholder="Description" value={formData.description} onChange={handleChange} />
-          <input type="number" name="price" placeholder="Price" value={formData.price} onChange={handleChange} required />
-          <input type="text" name="location" placeholder="Location" value={formData.location} onChange={handleChange} />
-          <input type="text" name="images" placeholder="Image URLs (comma separated)" value={formData.images} onChange={handleChange} />
-          <button type="submit">Add Item</button>
+      {(items.length < 30 || formData._id) && (
+        <form onSubmit={handleSubmit} className="bg-white shadow p-4 rounded space-y-4 mb-8">
+          <h3 className="text-xl font-semibold">
+            {formData._id ? '✏️ Edit Item' : '➕ Add New Item'}
+          </h3>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Item Name"
+            required
+            className="input w-full"
+          />
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="Description"
+            className="input w-full"
+          />
+          <input
+            type="number"
+            name="price"
+            value={formData.price}
+            onChange={handleChange}
+            placeholder="Price (NZD)"
+            required
+            className="input w-full"
+          />
+          <input
+            type="text"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            placeholder="Store Location"
+            className="input w-full"
+          />
+          <textarea
+            name="images"
+            value={formData.images}
+            onChange={handleChange}
+            placeholder="Image URLs (comma separated)"
+            className="input w-full"
+          />
+          <button type="submit" className="btn-primary">
+            {formData._id ? 'Update Item' : 'Add Item'}
+          </button>
         </form>
-      ) : (
-        <p>You’ve reached your 30-item limit. Delete an item to add more.</p>
       )}
 
-      <h3>Your Items</h3>
+      {items.length >= 30 && !formData._id && (
+        <p className="text-red-600 font-semibold mb-6">
+          ⚠️ You’ve reached your 30-item limit. Delete an item to add more.
+        </p>
+      )}
+
+      <h3 className="text-xl font-semibold mb-2">📋 Your Items</h3>
       {items.length === 0 ? (
         <p>No items listed yet.</p>
       ) : (
-        <div>
+        <div className="space-y-4">
           {items.map((item) => (
-            <div key={item._id} style={{ border: '1px solid #ccc', padding: '1rem', marginBottom: '1rem' }}>
-              <h4>{item.name}</h4>
+            <div key={item._id} className="p-4 border rounded bg-white">
+              <h4 className="text-lg font-bold">#{item.itemNumber} — {item.name}</h4>
               <p>{item.description}</p>
-              <p><strong>${item.price}</strong></p>
-              <p><small>Item #{item.itemNumber}</small></p>
-              {item.images?.length > 0 && (
-                <img src={item.images[0]} alt={item.name} width="150" />
+              <p><strong>${item.price.toFixed(2)}</strong></p>
+              <p className="text-sm text-gray-500">Views: {item.views} | Clicks: {item.clicks}</p>
+              {item.heldBy && (
+                <p className="text-sm text-red-500">Held by: {item.heldBy}</p>
               )}
+              {item.images?.length > 0 && (
+                <img
+                  src={item.images[0]}
+                  alt={item.name}
+                  className="mt-2 max-w-xs border rounded"
+                />
+              )}
+              <div className="flex gap-4 mt-2">
+                <button onClick={() => handleEdit(item)} className="text-blue-600 hover:underline text-sm">
+                  ✏️ Edit
+                </button>
+                <button onClick={() => handleDelete(item._id)} className="text-red-600 hover:underline text-sm">
+                  🗑 Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>

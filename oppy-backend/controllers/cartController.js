@@ -1,9 +1,8 @@
-// File: controllers/cartController.js
-
 const CartItem = require('../models/CartItem');
 const Item = require('../models/Item');
+const Notification = require('../models/Notification'); // ✅ Added for notifications
 
-// Hold an item
+// ✅ Hold an item
 const holdItem = async (req, res) => {
   const customerId = req.user.sub;
   const { itemId } = req.params;
@@ -28,14 +27,26 @@ const holdItem = async (req, res) => {
       return res.status(400).json({ message: 'Item is already held by another user.' });
     }
 
+    // Save the hold
     const hold = new CartItem({
       customerId,
       itemId,
       viewingTime: viewTime,
       expiresAt: twentyFourHoursLater
     });
-
     await hold.save();
+
+    // ✅ Notify the vendor
+    const item = await Item.findById(itemId);
+    if (item && item.vendorId) {
+      const notification = new Notification({
+        vendorId: item.vendorId,
+        itemId,
+        customerId,
+        message: `A customer has held your item: "${item.name}"`
+      });
+      await notification.save();
+    }
 
     res.status(201).json({ message: 'Item successfully held.', viewingTime: viewTime });
   } catch (err) {
@@ -44,7 +55,7 @@ const holdItem = async (req, res) => {
   }
 };
 
-// View held items for this customer
+// ✅ View active held items in cart (raw item objects only)
 const getCart = async (req, res) => {
   const customerId = req.user.sub;
 
@@ -62,7 +73,25 @@ const getCart = async (req, res) => {
   }
 };
 
-// Release a held item
+// ✅ Get held items with full hold details (for "My Holds" page)
+const getHeldItems = async (req, res) => {
+  const customerId = req.user.sub;
+
+  try {
+    const now = new Date();
+    const heldItems = await CartItem.find({
+      customerId,
+      expiresAt: { $gt: now }
+    }).populate('itemId');
+
+    res.status(200).json(heldItems); // includes expiresAt, viewingTime, and full itemId details
+  } catch (err) {
+    console.error('Fetch held items error:', err.message);
+    res.status(500).json({ message: 'Failed to load held items.' });
+  }
+};
+
+// ✅ Release a held item
 const releaseItem = async (req, res) => {
   const customerId = req.user.sub;
   const { itemId } = req.params;
@@ -81,4 +110,9 @@ const releaseItem = async (req, res) => {
   }
 };
 
-module.exports = { holdItem, getCart, releaseItem };
+module.exports = {
+  holdItem,
+  getCart,
+  getHeldItems,
+  releaseItem
+};

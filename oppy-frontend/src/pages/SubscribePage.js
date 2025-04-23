@@ -1,14 +1,40 @@
-// File: src/pages/SubscribePage.js
 import React from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const SubscribePage = () => {
+  const navigate = useNavigate();
+
   const handleSubscribe = async () => {
+    const token = localStorage.getItem('customerToken');
+
+    if (!token) {
+      const confirm = window.confirm('You must be logged in as a customer to subscribe. Go to login?');
+      if (confirm) {
+        navigate('/login/customer'); // ✅ Change this if your login route is different
+      }
+      return;
+    }
+
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/subscribe`);
-      window.location.href = res.data.url; // Redirect to Stripe Checkout
+      const res = await axios.post(
+        '/api/subscribe',
+        { tier: 2 },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (res.data.url) {
+        window.location.href = res.data.url; // ✅ This is where Stripe should take over
+      } else {
+        console.error('No checkout URL returned.');
+        alert('Subscription failed.');
+      }
     } catch (err) {
-      console.error('Subscription error:', err.message);
+      console.error('❌ Subscription error:', err.message);
       alert('Something went wrong starting your subscription.');
     }
   };

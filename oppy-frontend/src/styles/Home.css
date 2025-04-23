@@ -1,0 +1,90 @@
+.home-container {
+    padding-top: 80px;
+    min-height: 100vh;
+    background: linear-gradient(to bottom right, #fffdf7, #ffffff);
+    font-family: 'Segoe UI', sans-serif;
+    color: #333;
+  }
+  
+  .home-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .home-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .home-header p {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 1.5rem;
+  }
+  
+  .cta-button {
+    background-color: #ffa24d;
+    color: white;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-top: 0.5rem;
+  }
+  
+  .cta-button:hover {
+    background-color: #ff8c1a;
+  }
+  
+  .search-filter {
+    margin: 2rem auto;
+    max-width: 700px;
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+    text-align: center;
+  }
+  
+  .search-filter input[type="text"] {
+    padding: 0.75rem 1rem;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+  }
+  
+  .quadrant-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+  
+  .quadrant-filter label {
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    color: #444;
+  }
+  
+  .quadrant-filter input[type="checkbox"] {
+    margin-right: 0.5rem;
+  }
+  
+  .item-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 2rem;
+  }
+  
+  .empty-message {
+    font-size: 1.2rem;
+    color: #777;
+  }
+  
