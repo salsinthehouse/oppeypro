@@ -1,32 +1,28 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 
-import VendorCallback from './pages/VendorCallback';
-
 import Navbar from './components/Navbar';
 import AdminNavbar from './components/AdminNavbar';
 import Footer from './components/Footer';
 
 import Home from './pages/Home';
 import Cart from './pages/Cart';
-import SubscribePage from './pages/SubscribePage';
 
-import CustomerAuth from './pages/CustomerAuth';
+import VendorCallback from './pages/VendorCallback';
+import CustomerCallback from './pages/CustomerCallback';
+
 import VendorLoginRedirect from './pages/VendorLoginRedirect';
+import CustomerLoginRedirect from './pages/CustomerLoginRedirect';
 
 import ConfirmAccount from './pages/ConfirmAccount';
 import VendorDashboard from './pages/VendorDashboard';
-import RequireAuth from './components/RequireAuth';
+import CustomerDashboard from './pages/CustomerDashboard';
+import CustomerHolds from './pages/CustomerHolds';
 
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
 
-import CustomerLoginRedirect from './pages/CustomerLoginRedirect';
-import CustomerCallback from './pages/CustomerCallback';
-import CustomerDashboard from './pages/CustomerDashboard';
-
-import CustomerHolds from './pages/CustomerHolds';
-
+import RequireAuth from './components/RequireAuth';
 
 function AppWrapper() {
   const location = useLocation();
@@ -45,14 +41,32 @@ function AppWrapper() {
         <Route path="/vendor/callback" element={<VendorCallback />} />
         <Route path="/customer/callback" element={<CustomerCallback />} />
 
-        {/* Subscription */}
-        <Route path="/subscribe" element={<SubscribePage />} />
-        <Route path="/subscribe-success" element={<h2>✅ Subscription successful!</h2>} />
-        <Route path="/subscribe-cancel" element={<h2>❌ Subscription cancelled.</h2>} />
+        {/* Customer Pre-login */}
+        <Route path="/customer/auth" element={<CustomerLoginRedirect />} />
 
-        <Route path="/customer-dashboard" element={<CustomerDashboard />} />
-
+        {/* Customer Dashboard */}
+        <Route
+          path="/customer/dashboard"
+          element={
+            <RequireAuth role="customer">
+              <CustomerDashboard />
+            </RequireAuth>
+          }
+        />
         <Route path="/my-holds" element={<CustomerHolds />} />
+
+        {/* Vendor Pre-login */}
+        <Route path="/vendor/auth" element={<VendorLoginRedirect />} />
+
+        {/* Vendor Dashboard */}
+        <Route
+          path="/vendor/dashboard"
+          element={
+            <RequireAuth role="vendor">
+              <VendorDashboard />
+            </RequireAuth>
+          }
+        />
 
         {/* Admin */}
         <Route
@@ -65,29 +79,8 @@ function AppWrapper() {
         />
         <Route path="/login/admin" element={<AdminLogin />} />
 
-        {/* Customer */}
-        <Route path="/customer/auth" element={<CustomerLoginRedirect />} />
-        <Route
-          path="/customer/dashboard"
-          element={
-            <RequireAuth role="customer">
-              <CustomerDashboard />
-            </RequireAuth>
-          }
-        />
-
+        {/* Account Confirmation */}
         <Route path="/confirm" element={<ConfirmAccount />} />
-
-        {/* Vendor */}
-        <Route path="/vendor/auth" element={<VendorLoginRedirect />} />
-        <Route
-          path="/vendor/dashboard"
-          element={
-            <RequireAuth role="vendor">
-              <VendorDashboard />
-            </RequireAuth>
-          }
-        />
       </Routes>
 
       <Footer />

@@ -1,0 +1,30 @@
+.admin-container {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .admin-container h2 {
+    margin-bottom: 1rem;
+  }
+  .admin-container p {
+    margin-bottom: 1rem;
+  }
+  .admin-container .vendor-card {
+    border: 1px solid #ccc;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+  }
+  .admin-container .vendor-card p {
+    margin: 0.5rem 0;
+  }
+  .admin-container .vendor-card button {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  

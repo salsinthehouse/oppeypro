@@ -1,3 +1,5 @@
+// File: src/pages/Home.js
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ItemCard from '../components/ItemCard';
@@ -56,31 +58,20 @@ const Home = () => {
 
   const handleSubscribe = async () => {
     const token = localStorage.getItem('customerToken');
-    console.log('📦 customerToken:', token); // ✅ Debug log
-
     if (!token) {
-      const confirm = window.confirm('You must be logged in as a customer to subscribe. Go to login?');
-      if (confirm) window.location.href = '/login/customer';
+      if (window.confirm('You must be logged in as a customer to subscribe. Go to login?')) {
+        window.location.href = '/login/customer';
+      }
       return;
     }
-
     try {
       const res = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/subscribe`,
         { tier: 2 },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      if (res.data.url) {
-        console.log('✅ Redirecting to Stripe:', res.data.url);
-        window.location.href = res.data.url;
-      } else {
-        alert('Subscription failed. No Stripe checkout link returned.');
-      }
+      if (res.data.url) window.location.href = res.data.url;
+      else alert('Subscription failed. No Stripe checkout link returned.');
     } catch (err) {
       console.error('❌ Stripe subscription error:', err.response || err.message);
       alert('Error starting subscription. Check console.');
@@ -107,7 +98,7 @@ const Home = () => {
             type="text"
             placeholder="Search for items..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
           />
           <div className="quadrant-filter">
             {availableQuadrants.map(q => (
@@ -136,6 +127,8 @@ const Home = () => {
           )}
         </div>
       </div>
+
+      {/* If you have a site-wide footer component, render it here */}
     </>
   );
 };
