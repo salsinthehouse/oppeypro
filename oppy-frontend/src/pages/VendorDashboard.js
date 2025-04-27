@@ -1,9 +1,23 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import jwt_decode from 'jwt-decode';
 import '../styles/VendorDashboard.css';
 
 const VendorDashboard = () => {
+  const navigate = useNavigate();
+  const token =
+    localStorage.getItem('vendorAccessToken') ||
+    localStorage.getItem('vendorToken');
+
+  // Redirect to login if no token
+  useEffect(() => {
+    if (!token) navigate('/vendor/auth');
+  }, [token, navigate]);
+
+  // Decode vendorId from JWT
+  const vendorId = token ? jwt_decode(token).sub : null;
+
   const [items, setItems] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
@@ -17,22 +31,16 @@ const VendorDashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewImage, setPreviewImage] = useState('');
-  const navigate = useNavigate();
 
-  const token = localStorage.getItem('vendorAccessToken') || localStorage.getItem('vendorToken');
+  const headers = { Authorization: `Bearer ${token}` };
 
-  useEffect(() => {
-    if (!token) {
-      navigate('/vendor/auth');
-      return;
-    }
-  }, [token, navigate]);
-
+  // Fetch vendor items
   const fetchItems = useCallback(async () => {
     try {
-      const res = await axios.get('/api/vendors/items', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        `/api/items/vendor/${vendorId}`,
+        { headers }
+      );
       setItems(res.data);
     } catch (err) {
       console.error('❌ Error fetching items:', err);
@@ -43,13 +51,11 @@ const VendorDashboard = () => {
         navigate('/vendor/auth');
       }
     }
-  }, [token, navigate]);
+  }, [vendorId, navigate]);
 
   useEffect(() => {
-    if (token) {
-      fetchItems();
-    }
-  }, [fetchItems, token]);
+    if (vendorId) fetchItems();
+  }, [fetchItems, vendorId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,24 +67,20 @@ const VendorDashboard = () => {
     if (file) {
       setSelectedImage(file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result);
-      };
+      reader.onloadend = () => setPreviewImage(reader.result);
       reader.readAsDataURL(file);
     }
   };
 
   const uploadImage = async () => {
     if (!selectedImage) return [];
-    
-    const formData = new FormData();
-    formData.append('image', selectedImage);
-    
+    const fd = new FormData();
+    fd.append('image', selectedImage);
     try {
-      const res = await axios.post('/api/upload', formData, {
+      const res = await axios.post('/api/upload', fd, {
         headers: {
+          ...headers,
           'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`,
         },
       });
       return [res.data.url];
@@ -96,21 +98,14 @@ const VendorDashboard = () => {
 
   const handleDelete = async (itemId) => {
     if (!window.confirm('Are you sure you want to delete this item?')) return;
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      await axios.delete(`/api/vendors/items/${itemId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(`/api/items/${itemId}`, { headers });
       setMessage({ text: 'Item deleted successfully', type: 'success' });
       fetchItems();
     } catch (err) {
       console.error('Delete error:', err);
       setMessage({ text: 'Failed to delete item', type: 'error' });
-      if (err.response?.status === 401) {
-        localStorage.removeItem('vendorAccessToken');
-        localStorage.removeItem('vendorToken');
-        navigate('/vendor/auth');
-      }
     } finally {
       setIsLoading(false);
     }
@@ -119,7 +114,7 @@ const VendorDashboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       let imageUrls = formData.images;
       if (selectedImage) {
@@ -127,6 +122,7 @@ const VendorDashboard = () => {
       }
 
       const payload = {
+        vendorId,
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
@@ -135,29 +131,35 @@ const VendorDashboard = () => {
       };
 
       if (formData._id) {
-        await axios.put(`/api/vendors/items/${formData._id}`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.put(
+          `/api/items/${formData._id}`,
+          payload,
+          { headers }
+        );
         setMessage({ text: 'Item updated successfully', type: 'success' });
       } else {
-        await axios.post('/api/vendors/items', payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.post(
+          '/api/items',
+          payload,
+          { headers }
+        );
         setMessage({ text: 'Item added successfully', type: 'success' });
       }
 
-      setFormData({ name: '', description: '', price: '', location: '', images: [], _id: null });
+      setFormData({
+        name: '',
+        description: '',
+        price: '',
+        location: '',
+        images: [],
+        _id: null,
+      });
       setSelectedImage(null);
       setPreviewImage('');
       fetchItems();
     } catch (err) {
       console.error('Submit error:', err);
       setMessage({ text: 'Failed to save item', type: 'error' });
-      if (err.response?.status === 401) {
-        localStorage.removeItem('vendorAccessToken');
-        localStorage.removeItem('vendorToken');
-        navigate('/vendor/auth');
-      }
     } finally {
       setIsLoading(false);
     }
@@ -176,9 +178,7 @@ const VendorDashboard = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (!token) {
-    return null;
-  }
+  if (!vendorId) return null;
 
   return (
     <div className="vendor-dashboard">
@@ -198,7 +198,7 @@ const VendorDashboard = () => {
           {(items.length < 30 || formData._id) && (
             <form onSubmit={handleSubmit} className="item-form">
               <h3>{formData._id ? 'Edit Item' : 'Add New Item'}</h3>
-              
+
               <div className="form-group">
                 <label htmlFor="name">Item Name</label>
                 <input
@@ -264,9 +264,9 @@ const VendorDashboard = () => {
                   />
                   {previewImage && (
                     <div className="image-preview">
-                      <img src={previewImage} alt="Preview" />
-                      <button 
-                        type="button" 
+                      <img src={previewImage} alt="preview" />
+                      <button
+                        type="button"
                         className="remove-image"
                         onClick={() => {
                           setSelectedImage(null);
@@ -293,9 +293,9 @@ const VendorDashboard = () => {
             <p>No items found. Add your first item above.</p>
           ) : (
             <div className="items-grid">
-              {items.map((item) => (
+              {items.map(item => (
                 <div key={item._id} className="item-card">
-                  {item.images?.length > 0 && (
+                  {item.images?.[0] && (
                     <img src={item.images[0]} alt={item.name} className="item-image" />
                   )}
                   <div className="item-details">
@@ -307,7 +307,7 @@ const VendorDashboard = () => {
                       <button onClick={() => handleEdit(item)} className="edit-button">
                         Edit
                       </button>
-                      <button onClick={() => handleDelete(item._id)} className="delete-button">
+                      <button onClick={() => handleDelete(item._id)} className="delete-button" disabled={isLoading}>
                         Delete
                       </button>
                     </div>
