@@ -56,28 +56,6 @@ const Home = () => {
     );
   };
 
-  const handleSubscribe = async () => {
-    const token = localStorage.getItem('customerToken');
-    if (!token) {
-      if (window.confirm('You must be logged in as a customer to subscribe. Go to login?')) {
-        window.location.href = '/login/customer';
-      }
-      return;
-    }
-    try {
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/subscribe`,
-        { tier: 2 },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.data.url) window.location.href = res.data.url;
-      else alert('Subscription failed. No Stripe checkout link returned.');
-    } catch (err) {
-      console.error('❌ Stripe subscription error:', err.response || err.message);
-      alert('Error starting subscription. Check console.');
-    }
-  };
-
   return (
     <>
       <Navbar />
@@ -86,9 +64,6 @@ const Home = () => {
         <div className="home-header">
           <h1>Discover Hidden Treasures Near You</h1>
           <p>Search second-hand items from trusted local op shops.</p>
-          <button className="cta-button" onClick={handleSubscribe}>
-            Subscribe Now
-          </button>
         </div>
 
         <RevealStatus />

@@ -1,103 +1,48 @@
-/* General body styling */
-body {
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    flex-direction: column;
-    background-color: #f9f9f9;  /* Light grey background */
-  }
-  
-  /* Container for login form */
-  .login-container {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
-    padding: 2rem;
-    text-align: center;
-  }
-  
-  /* Title styling */
-  h2 {
-    font-size: 1.8rem;
-    color: #ffa24d;  /* Oppey orange */
-    margin-bottom: 2rem;
-  }
-  
-  /* Form styling */
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  /* Input field styling */
-  input[type="email"],
-  input[type="password"],
-  select {
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  
-  input[type="email"]:focus,
-  input[type="password"]:focus,
-  select:focus {
-    border-color: #ffa24d;  /* Highlight with orange */
-    outline: none;
-  }
-  
-  /* Select (Role selection) styling */
-  select {
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-    background-color: #fff;
-    color: #333;
-  }
-  
-  /* Submit button styling */
-  button {
-    background-color: #ffa24d;
-    color: white;
-    padding: 12px;
-    font-size: 1.1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  button:hover {
-    background-color: #e6893e;  /* Slightly darker orange on hover */
-  }
-  
-  /* Responsive Design */
-  @media (max-width: 600px) {
-    .login-container {
-      width: 90%;
-      padding: 1.5rem;
-    }
-  
-    h2 {
-      font-size: 1.6rem;
-    }
-  
-    input[type="email"],
-    input[type="password"],
-    select,
-    button {
-      font-size: 1rem;
-    }
-  }
-  
+/* File: src/styles/Login.css */
+
+.login-container {
+  max-width: 400px;
+  margin: 4rem auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.login-container h2 {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.login-container input {
+  display: block;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.login-container button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #ffa24d;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.login-container button:hover {
+  background-color: #e5943c;
+}
+
+.error-message {
+  margin-top: 1rem;
+  color: #d32f2f;
+  text-align: center;
+}

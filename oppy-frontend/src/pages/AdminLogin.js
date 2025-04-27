@@ -1,5 +1,11 @@
+// File: src/pages/AdminLogin.js
+
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import '../styles/Login.css';
+
+const baseUrl = process.env.REACT_APP_API_URL || window.location.origin;
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -12,37 +18,30 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
+      const res = await axios.post(
+        `${baseUrl}/api/auth/login`,
+        { email, password },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
-
-      const token = data?.tokens?.AccessToken || data?.token;
-
-      if (!token) {
-        throw new Error('No access token received.');
-      }
+      const token = res.data?.tokens?.AccessToken || res.data?.token;
+      if (!token) throw new Error('No access token received.');
 
       localStorage.setItem('adminToken', token);
       localStorage.setItem('adminEmail', email);
       navigate('/admin');
     } catch (err) {
       console.error('Admin login error:', err);
-      setError(err.message || 'Something went wrong. Please try again.');
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        'Login failed. Please try again.'
+      );
     }
   };
 
   return (
-    <div className="admin-login" style={{ maxWidth: '400px', margin: 'auto', padding: '2rem' }}>
+    <div className="login-container">
       <h2>Admin Login</h2>
       <form onSubmit={handleLogin}>
         <input
@@ -51,7 +50,6 @@ const AdminLogin = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={{ display: 'block', marginBottom: '1rem', width: '100%' }}
         />
         <input
           type="password"
@@ -59,10 +57,9 @@ const AdminLogin = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={{ display: 'block', marginBottom: '1rem', width: '100%' }}
         />
-        <button type="submit" style={{ width: '100%' }}>Login</button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        <button type="submit">Login</button>
+        {error && <p className="error-message">{error}</p>}
       </form>
     </div>
   );
