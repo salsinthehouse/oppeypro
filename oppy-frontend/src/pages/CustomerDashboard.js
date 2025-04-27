@@ -2,20 +2,38 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import '../styles/CustomerDashboard.css';
 
 const CustomerDashboard = () => {
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState('');
   const [quadrant, setQuadrant] = useState('');
   const [subscribed, setSubscribed] = useState(false);
-  const token = localStorage.getItem('customerIdToken');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  
+  // Get the correct token name that matches CustomerLogin.js
+  const token = localStorage.getItem('customerAccessToken');
 
   useEffect(() => {
+    // Redirect to login if no token
+    if (!token) {
+      navigate('/login/customer');
+      return;
+    }
+
     const fetchData = async () => {
       try {
+        setLoading(true);
+        setError(null);
+        
         const [itemsRes, subRes] = await Promise.all([
-          axios.get('/api/items'),
-          axios.get('/api/auth/check-sub', {
+          axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/items`, {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/check-sub`, {
             headers: { Authorization: `Bearer ${token}` }
           })
         ]);
@@ -24,18 +42,25 @@ const CustomerDashboard = () => {
         setSubscribed(subRes.data.subscribed);
       } catch (err) {
         console.error('❌ Error fetching customer data:', err);
+        setError(err.response?.data?.message || 'Failed to load dashboard data');
+        if (err.response?.status === 401) {
+          localStorage.removeItem('customerAccessToken');
+          navigate('/login/customer');
+        }
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
-  }, [token]);
+  }, [token, navigate]);
 
   const handleHold = async (itemId) => {
     const confirm = window.confirm('Hold this item for 24 hours?');
     if (!confirm) return;
 
     try {
-      const res = await axios.post(`/api/cart/hold/${itemId}`, null, {
+      await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/cart/hold/${itemId}`, null, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('✅ Item held for 24 hours');
@@ -46,7 +71,7 @@ const CustomerDashboard = () => {
       );
     } catch (err) {
       console.error('❌ Failed to hold item:', err);
-      alert('Error holding item');
+      alert(err.response?.data?.message || 'Error holding item');
     }
   };
 
@@ -58,20 +83,51 @@ const CustomerDashboard = () => {
     return matchesSearch && matchesQuadrant && item.active;
   });
 
-  return (
-    <div className="customer-dashboard" style={{ padding: '2rem', maxWidth: '900px', margin: 'auto' }}>
-      <h2 style={{ fontSize: '24px', marginBottom: '1rem' }}>🧍 Welcome to Oppy</h2>
+  if (loading) {
+    return (
+      <div className="customer-dashboard">
+        <div className="loading-state">
+          <h2>Loading...</h2>
+        </div>
+      </div>
+    );
+  }
 
-      <div style={{ marginBottom: '1rem' }}>
+  if (error) {
+    return (
+      <div className="customer-dashboard">
+        <div className="error-state">
+          <h2>Error</h2>
+          <p>{error}</p>
+          <button className="hold-button" onClick={() => navigate('/login/customer')}>
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="customer-dashboard">
+      <div className="dashboard-header">
+        <h2>Welcome to Oppy</h2>
+        <p className="dashboard-subtitle">Browse and hold items from local vendors</p>
+      </div>
+
+      <div className="search-container">
         <input
           type="text"
+          className="search-input"
           placeholder="Search items..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ padding: '0.5rem', width: '100%', marginBottom: '1rem' }}
         />
 
-        <select value={quadrant} onChange={(e) => setQuadrant(e.target.value)} style={{ padding: '0.5rem', width: '100%' }}>
+        <select
+          className="filter-select"
+          value={quadrant}
+          onChange={(e) => setQuadrant(e.target.value)}
+        >
           <option value="">Filter by Quadrant</option>
           <option value="north">North</option>
           <option value="south">South</option>
@@ -82,25 +138,37 @@ const CustomerDashboard = () => {
       </div>
 
       {filteredItems.length === 0 ? (
-        <p>No items found.</p>
+        <div className="loading-state">
+          <p>No items found.</p>
+        </div>
       ) : (
-        <div>
+        <div className="items-grid">
           {filteredItems.map((item) => (
-            <div key={item._id} style={{ border: '1px solid #ccc', padding: '1rem', marginBottom: '1rem' }}>
-              <h3>{item.name}</h3>
-              <p>{item.description}</p>
-              <p><strong>Price:</strong> ${item.price.toFixed(2)}</p>
-              {subscribed ? (
-                <p><strong>Location:</strong> {item.location}</p>
-              ) : (
-                <p><strong>Location:</strong> 🔒 Unlock with subscription</p>
-              )}
+            <div key={item._id} className="item-card">
               {item.images?.length > 0 && (
-                <img src={item.images[0]} alt={item.name} width="150" style={{ marginTop: '0.5rem' }} />
+                <div className="item-image">
+                  <img src={item.images[0]} alt={item.name} />
+                </div>
               )}
-              <button onClick={() => handleHold(item._id)} style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>
-                Hold for 24h
-              </button>
+              <div className="item-details">
+                <h3>{item.name}</h3>
+                <p className="item-description">{item.description}</p>
+                <p className="item-price">${item.price.toFixed(2)}</p>
+                <p className="item-location">
+                  {subscribed ? (
+                    <span>📍 {item.location}</span>
+                  ) : (
+                    <span>🔒 Location locked (Subscribe to view)</span>
+                  )}
+                </p>
+                <button
+                  className="hold-button"
+                  onClick={() => handleHold(item._id)}
+                  disabled={item.heldBy === 'you'}
+                >
+                  {item.heldBy === 'you' ? 'Held for 24h' : 'Hold for 24h'}
+                </button>
+              </div>
             </div>
           ))}
         </div>

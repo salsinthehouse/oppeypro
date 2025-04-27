@@ -19,7 +19,7 @@ const VendorDashboard = () => {
   const [previewImage, setPreviewImage] = useState('');
   const navigate = useNavigate();
 
-  const token = localStorage.getItem('vendorToken');
+  const token = localStorage.getItem('vendorAccessToken') || localStorage.getItem('vendorToken');
 
   useEffect(() => {
     if (!token) {
@@ -38,6 +38,7 @@ const VendorDashboard = () => {
       console.error('❌ Error fetching items:', err);
       setMessage({ text: 'Failed to fetch items', type: 'error' });
       if (err.response?.status === 401) {
+        localStorage.removeItem('vendorAccessToken');
         localStorage.removeItem('vendorToken');
         navigate('/vendor/auth');
       }
@@ -85,6 +86,7 @@ const VendorDashboard = () => {
       console.error('Upload error:', err);
       setMessage({ text: 'Failed to upload image', type: 'error' });
       if (err.response?.status === 401) {
+        localStorage.removeItem('vendorAccessToken');
         localStorage.removeItem('vendorToken');
         navigate('/vendor/auth');
       }
@@ -105,6 +107,7 @@ const VendorDashboard = () => {
       console.error('Delete error:', err);
       setMessage({ text: 'Failed to delete item', type: 'error' });
       if (err.response?.status === 401) {
+        localStorage.removeItem('vendorAccessToken');
         localStorage.removeItem('vendorToken');
         navigate('/vendor/auth');
       }
@@ -151,6 +154,7 @@ const VendorDashboard = () => {
       console.error('Submit error:', err);
       setMessage({ text: 'Failed to save item', type: 'error' });
       if (err.response?.status === 401) {
+        localStorage.removeItem('vendorAccessToken');
         localStorage.removeItem('vendorToken');
         navigate('/vendor/auth');
       }

@@ -1,51 +1,54 @@
-const express = require('express');
-const router = express.Router();
-const Item = require('../models/Item');
+const mongoose = require('mongoose');
 
-// Get all items for a specific vendor
-router.get('/vendor/:vendorId', async (req, res) => {
-  try {
-    const items = await Item.find({ vendorId: req.params.vendorId });
-    res.json(items);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch vendor items' });
-  }
+const itemSchema = new mongoose.Schema({
+  vendorId: {
+    type: String,
+    required: true,
+  },
+  itemNumber: {
+    type: Number,
+    required: true,
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
+  images: [{
+    type: String,
+  }],
+  location: {
+    type: String,
+    required: true,
+  },
+  views: {
+    type: Number,
+    default: 0,
+  },
+  clicks: {
+    type: Number,
+    default: 0,
+  },
+  heldBy: {
+    type: String,
+    default: null,
+  },
+  status: {
+    type: String,
+    enum: ['active', 'sold', 'held'],
+    default: 'active',
+  },
+}, {
+  timestamps: true,
 });
 
-// Create a new item
-router.post('/', async (req, res) => {
-  try {
-    const {
-      vendorId,
-      name,
-      description,
-      price,
-      images,
-      location
-    } = req.body;
+const Item = mongoose.model('Item', itemSchema);
 
-    // Count items to assign a number
-    const itemCount = await Item.countDocuments({ vendorId });
-    if (itemCount >= 30) {
-      return res.status(400).json({ error: 'Maximum item limit reached (30)' });
-    }
-
-    const newItem = new Item({
-      vendorId,
-      itemNumber: itemCount + 1,
-      name,
-      description,
-      price,
-      images,
-      location
-    });
-
-    await newItem.save();
-    res.status(201).json(newItem);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to create item' });
-  }
-});
-
-module.exports = router;
+module.exports = Item;

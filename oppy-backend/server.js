@@ -2,6 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const path = require('path');
 require('dotenv').config();
 
 const connectDB = require('./db');
@@ -30,6 +31,9 @@ app.use('/webhook', stripeWebhook); // Uses express.raw internally
 app.use(cors());
 app.use(express.json());
 
+// ✅ Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // ✅ Logger
 app.use((req, res, next) => {
   console.log(`➡️  ${req.method} ${req.originalUrl}`);
@@ -55,6 +59,9 @@ try {
 
   app.use('/api/subscribe', require('./routes/subscribe'));
   console.log('✅ Subscription route mounted at /api/subscribe');
+
+  app.use('/api/upload', require('./routes/upload'));
+  console.log('✅ Upload route mounted at /api/upload');
 } catch (err) {
   console.error('❌ Failed to mount a route:', err.message);
 }

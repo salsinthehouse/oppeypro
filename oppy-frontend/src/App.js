@@ -18,6 +18,7 @@ import ConfirmAccount from './pages/ConfirmAccount';
 import VendorDashboard from './pages/VendorDashboard';
 import CustomerDashboard from './pages/CustomerDashboard';
 import CustomerHolds from './pages/CustomerHolds';
+import CustomerLogin from './pages/CustomerLogin';
 
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
@@ -42,11 +43,12 @@ function AppWrapper() {
         <Route path="/customer/callback" element={<CustomerCallback />} />
 
         {/* Customer Pre-login */}
+        <Route path="/login/customer" element={<CustomerLogin />} />
         <Route path="/customer/auth" element={<CustomerLoginRedirect />} />
 
         {/* Customer Dashboard */}
         <Route
-          path="/customer/dashboard"
+          path="/customer-dashboard"
           element={
             <RequireAuth role="customer">
               <CustomerDashboard />
