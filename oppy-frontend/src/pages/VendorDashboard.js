@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import '../styles/VendorDashboard.css';
 
 const VendorDashboard = () => {
   const [items, setItems] = useState([]);
@@ -8,12 +10,23 @@ const VendorDashboard = () => {
     description: '',
     price: '',
     location: '',
-    images: '',
-    _id: null, // null = add mode
+    images: [],
+    _id: null,
   });
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState({ text: '', type: '' });
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState('');
+  const navigate = useNavigate();
 
   const token = localStorage.getItem('vendorToken');
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/vendor/auth');
+      return;
+    }
+  }, [token, navigate]);
 
   const fetchItems = useCallback(async () => {
     try {
@@ -23,68 +36,126 @@ const VendorDashboard = () => {
       setItems(res.data);
     } catch (err) {
       console.error('❌ Error fetching items:', err);
+      setMessage({ text: 'Failed to fetch items', type: 'error' });
+      if (err.response?.status === 401) {
+        localStorage.removeItem('vendorToken');
+        navigate('/vendor/auth');
+      }
     }
-  }, [token]);
+  }, [token, navigate]);
 
   useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+    if (token) {
+      fetchItems();
+    }
+  }, [fetchItems, token]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async () => {
+    if (!selectedImage) return [];
+    
+    const formData = new FormData();
+    formData.append('image', selectedImage);
+    
+    try {
+      const res = await axios.post('/api/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return [res.data.url];
+    } catch (err) {
+      console.error('Upload error:', err);
+      setMessage({ text: 'Failed to upload image', type: 'error' });
+      if (err.response?.status === 401) {
+        localStorage.removeItem('vendorToken');
+        navigate('/vendor/auth');
+      }
+      return [];
+    }
+  };
+
   const handleDelete = async (itemId) => {
     if (!window.confirm('Are you sure you want to delete this item?')) return;
     try {
+      setIsLoading(true);
       await axios.delete(`/api/vendors/items/${itemId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setMessage('🗑 Item deleted');
+      setMessage({ text: 'Item deleted successfully', type: 'success' });
       fetchItems();
     } catch (err) {
       console.error('Delete error:', err);
-      setMessage('❌ Failed to delete item');
+      setMessage({ text: 'Failed to delete item', type: 'error' });
+      if (err.response?.status === 401) {
+        localStorage.removeItem('vendorToken');
+        navigate('/vendor/auth');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const imagesArray = formData.images
-      .split(',')
-      .map((img) => img.trim())
-      .filter((img) => img);
-
-    const payload = {
-      name: formData.name,
-      description: formData.description,
-      price: parseFloat(formData.price),
-      location: formData.location,
-      images: imagesArray,
-    };
-
+    setIsLoading(true);
+    
     try {
+      let imageUrls = formData.images;
+      if (selectedImage) {
+        imageUrls = await uploadImage();
+      }
+
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        location: formData.location,
+        images: imageUrls,
+      };
+
       if (formData._id) {
-        // Edit item
         await axios.put(`/api/vendors/items/${formData._id}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setMessage('✏️ Item updated successfully');
+        setMessage({ text: 'Item updated successfully', type: 'success' });
       } else {
-        // Create new item
         await axios.post('/api/vendors/items', payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setMessage('✅ Item added successfully');
+        setMessage({ text: 'Item added successfully', type: 'success' });
       }
 
-      // Clear form and refresh
-      setFormData({ name: '', description: '', price: '', location: '', images: '', _id: null });
+      setFormData({ name: '', description: '', price: '', location: '', images: [], _id: null });
+      setSelectedImage(null);
+      setPreviewImage('');
       fetchItems();
     } catch (err) {
       console.error('Submit error:', err);
-      setMessage('❌ Failed to save item');
+      setMessage({ text: 'Failed to save item', type: 'error' });
+      if (err.response?.status === 401) {
+        localStorage.removeItem('vendorToken');
+        navigate('/vendor/auth');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,108 +165,155 @@ const VendorDashboard = () => {
       description: item.description,
       price: item.price,
       location: item.location,
-      images: item.images.join(', '),
+      images: item.images,
       _id: item._id,
     });
+    setPreviewImage(item.images[0] || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  if (!token) {
+    return null;
+  }
+
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4">📦 Vendor Dashboard</h2>
+    <div className="vendor-dashboard">
+      <div className="dashboard-header">
+        <h2>Vendor Dashboard</h2>
+        <p className="dashboard-subtitle">Manage your items and track performance</p>
+      </div>
 
-      {message && <p className="text-green-600 font-medium mb-4">{message}</p>}
-
-      {(items.length < 30 || formData._id) && (
-        <form onSubmit={handleSubmit} className="bg-white shadow p-4 rounded space-y-4 mb-8">
-          <h3 className="text-xl font-semibold">
-            {formData._id ? '✏️ Edit Item' : '➕ Add New Item'}
-          </h3>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Item Name"
-            required
-            className="input w-full"
-          />
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Description"
-            className="input w-full"
-          />
-          <input
-            type="number"
-            name="price"
-            value={formData.price}
-            onChange={handleChange}
-            placeholder="Price (NZD)"
-            required
-            className="input w-full"
-          />
-          <input
-            type="text"
-            name="location"
-            value={formData.location}
-            onChange={handleChange}
-            placeholder="Store Location"
-            className="input w-full"
-          />
-          <textarea
-            name="images"
-            value={formData.images}
-            onChange={handleChange}
-            placeholder="Image URLs (comma separated)"
-            className="input w-full"
-          />
-          <button type="submit" className="btn-primary">
-            {formData._id ? 'Update Item' : 'Add Item'}
-          </button>
-        </form>
-      )}
-
-      {items.length >= 30 && !formData._id && (
-        <p className="text-red-600 font-semibold mb-6">
-          ⚠️ You’ve reached your 30-item limit. Delete an item to add more.
-        </p>
-      )}
-
-      <h3 className="text-xl font-semibold mb-2">📋 Your Items</h3>
-      {items.length === 0 ? (
-        <p>No items listed yet.</p>
-      ) : (
-        <div className="space-y-4">
-          {items.map((item) => (
-            <div key={item._id} className="p-4 border rounded bg-white">
-              <h4 className="text-lg font-bold">#{item.itemNumber} — {item.name}</h4>
-              <p>{item.description}</p>
-              <p><strong>${item.price.toFixed(2)}</strong></p>
-              <p className="text-sm text-gray-500">Views: {item.views} | Clicks: {item.clicks}</p>
-              {item.heldBy && (
-                <p className="text-sm text-red-500">Held by: {item.heldBy}</p>
-              )}
-              {item.images?.length > 0 && (
-                <img
-                  src={item.images[0]}
-                  alt={item.name}
-                  className="mt-2 max-w-xs border rounded"
-                />
-              )}
-              <div className="flex gap-4 mt-2">
-                <button onClick={() => handleEdit(item)} className="text-blue-600 hover:underline text-sm">
-                  ✏️ Edit
-                </button>
-                <button onClick={() => handleDelete(item._id)} className="text-red-600 hover:underline text-sm">
-                  🗑 Delete
-                </button>
-              </div>
-            </div>
-          ))}
+      {message.text && (
+        <div className={`message ${message.type}`}>
+          {message.text}
         </div>
       )}
+
+      <div className="dashboard-content">
+        <div className="item-form-container">
+          {(items.length < 30 || formData._id) && (
+            <form onSubmit={handleSubmit} className="item-form">
+              <h3>{formData._id ? 'Edit Item' : 'Add New Item'}</h3>
+              
+              <div className="form-group">
+                <label htmlFor="name">Item Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Enter item name"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="description">Description</label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Enter item description"
+                  rows="3"
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="price">Price (NZD)</label>
+                  <input
+                    type="number"
+                    id="price"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                    required
+                    step="0.01"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="location">Store Location</label>
+                  <input
+                    type="text"
+                    id="location"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    placeholder="Enter location"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="image">Item Image</label>
+                <div className="image-upload">
+                  <input
+                    type="file"
+                    id="image"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="image-input"
+                  />
+                  {previewImage && (
+                    <div className="image-preview">
+                      <img src={previewImage} alt="Preview" />
+                      <button 
+                        type="button" 
+                        className="remove-image"
+                        onClick={() => {
+                          setSelectedImage(null);
+                          setPreviewImage('');
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <button type="submit" className="submit-button" disabled={isLoading}>
+                {isLoading ? 'Saving...' : (formData._id ? 'Update Item' : 'Add Item')}
+              </button>
+            </form>
+          )}
+        </div>
+
+        <div className="items-list">
+          <h3>Your Items ({items.length}/30)</h3>
+          {items.length === 0 ? (
+            <p>No items found. Add your first item above.</p>
+          ) : (
+            <div className="items-grid">
+              {items.map((item) => (
+                <div key={item._id} className="item-card">
+                  {item.images?.length > 0 && (
+                    <img src={item.images[0]} alt={item.name} className="item-image" />
+                  )}
+                  <div className="item-details">
+                    <h4>{item.name}</h4>
+                    <p>{item.description}</p>
+                    <p className="price">${item.price.toFixed(2)}</p>
+                    <p className="location">{item.location}</p>
+                    <div className="item-actions">
+                      <button onClick={() => handleEdit(item)} className="edit-button">
+                        Edit
+                      </button>
+                      <button onClick={() => handleDelete(item._id)} className="delete-button">
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
