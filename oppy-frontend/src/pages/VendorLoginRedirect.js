@@ -8,6 +8,7 @@ const VendorLoginRedirect = () => {
 
     const loginUrl = `${domain}/login?client_id=${clientId}&response_type=code&scope=email+openid+phone&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
+    console.log('Redirecting to:', loginUrl);
     window.location.href = loginUrl;
   }, []);
 

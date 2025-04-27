@@ -33,6 +33,12 @@ const Navbar = () => {
           </>
         )}
 
+        {vendorLoggedIn && (
+          <Link to="/vendor/dashboard" className="navbar__link" style={{ marginRight: '1rem' }}>
+            📊 Dashboard
+          </Link>
+        )}
+
         {(customerLoggedIn || vendorLoggedIn) && (
           <button
             onClick={handleLogout}
