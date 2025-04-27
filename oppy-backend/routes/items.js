@@ -43,7 +43,8 @@ router.post('/', async (req, res) => {
       description,
       price,
       images,
-      location
+      location,
+      active: true
     });
 
     await newItem.save();

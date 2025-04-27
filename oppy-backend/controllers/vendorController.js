@@ -26,7 +26,8 @@ const createItem = async (req, res) => {
       description,
       price,
       location,
-      images // this should be an array of image URLs
+      images, // this should be an array of image URLs
+      active: true // Add this line to make items visible by default
     });
 
     await newItem.save();
