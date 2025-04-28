@@ -2,87 +2,109 @@
 
 const express = require('express');
 const router = express.Router();
+const verifyVendorAccess = require('../middleware/storeAuth');
 const Item = require('../models/Item');
+const { getVendorItems } = require('../controllers/vendorController');
 
-// ✅ GET all items (for customers)
-router.get('/', async (req, res) => {
+// Public route to get all items
+router.get('/all', async (req, res) => {
   try {
-    const items = await Item.find().sort({ createdAt: -1 });
+    const items = await Item.find({}).sort({ itemNumber: 1 });
     res.json(items);
   } catch (err) {
-    console.error('Error fetching all items:', err);
-    res.status(500).json({ error: 'Failed to fetch items' });
+    console.error('❌ Failed to load items:', err.message);
+    res.status(500).json({ message: 'Failed to load items.' });
   }
 });
 
-// ✅ GET vendor-specific items
-router.get('/vendor/:vendorId', async (req, res) => {
-  try {
-    const items = await Item.find({ vendorId: req.params.vendorId });
-    res.json(items);
-  } catch (err) {
-    console.error('Error fetching vendor items:', err);
-    res.status(500).json({ error: 'Failed to fetch vendor items' });
-  }
-});
+// Apply vendor authentication middleware to protected routes
+router.use(verifyVendorAccess);
 
-// ✅ Create a new item
+// Create a new item
 router.post('/', async (req, res) => {
   try {
-    const { vendorId, name, description, price, images, location } = req.body;
-
-    const itemCount = await Item.countDocuments({ vendorId });
-    if (itemCount >= 30) {
-      return res.status(400).json({ error: 'Maximum item limit reached (30)' });
-    }
-
-    const newItem = new Item({
-      vendorId,
-      itemNumber: itemCount + 1,
-      name,
-      description,
-      price,
-      images,
-      location,
-      active: true
+    const item = new Item({
+      vendorId: req.vendorId,
+      ...req.body
     });
-
-    await newItem.save();
-    res.status(201).json(newItem);
-  } catch (err) {
-    console.error('Create item error:', err);
+    await item.save();
+    res.status(201).json(item);
+  } catch (error) {
+    console.error('Error creating item:', error);
     res.status(500).json({ error: 'Failed to create item' });
   }
 });
 
-// ✅ Edit existing item
-router.put('/:id', async (req, res) => {
+// Get all items for the vendor
+router.get('/', async (req, res) => {
   try {
-    const updatedItem = await Item.findByIdAndUpdate(
-      req.params.id,
-      req.body,
+    const items = await Item.find({ vendorId: req.vendorId });
+    res.json(items);
+  } catch (error) {
+    console.error('Error fetching items:', error);
+    res.status(500).json({ error: 'Failed to fetch items' });
+  }
+});
+
+// Get items by status
+router.get('/status/:status', async (req, res) => {
+  try {
+    const items = await Item.find({ 
+      vendorId: req.vendorId,
+      status: req.params.status 
+    });
+    res.json(items);
+  } catch (error) {
+    console.error('Error fetching items by status:', error);
+    res.status(500).json({ error: 'Failed to fetch items' });
+  }
+});
+
+// Get items by location
+router.get('/location/:location', async (req, res) => {
+  try {
+    const items = await Item.find({ 
+      vendorId: req.vendorId,
+      location: req.params.location 
+    });
+    res.json(items);
+  } catch (error) {
+    console.error('Error fetching items by location:', error);
+    res.status(500).json({ error: 'Failed to fetch items' });
+  }
+});
+
+// Update an item
+router.put('/:itemId', async (req, res) => {
+  try {
+    const updatedItem = await Item.findOneAndUpdate(
+      { _id: req.params.itemId, vendorId: req.vendorId },
+      { $set: req.body },
       { new: true }
     );
     if (!updatedItem) {
-      return res.status(404).json({ error: 'Item not found' });
+      return res.status(404).json({ error: 'Item not found or unauthorized' });
     }
     res.json(updatedItem);
-  } catch (err) {
-    console.error('Edit item error:', err);
+  } catch (error) {
+    console.error('Error updating item:', error);
     res.status(500).json({ error: 'Failed to update item' });
   }
 });
 
-// ✅ DELETE an item
-router.delete('/:id', async (req, res) => {
+// Delete an item
+router.delete('/:itemId', async (req, res) => {
   try {
-    const deleted = await Item.findByIdAndDelete(req.params.id);
-    if (!deleted) {
-      return res.status(404).json({ error: 'Item not found' });
+    const result = await Item.findOneAndDelete({ 
+      _id: req.params.itemId, 
+      vendorId: req.vendorId 
+    });
+    if (!result) {
+      return res.status(404).json({ error: 'Item not found or unauthorized' });
     }
     res.json({ message: 'Item deleted successfully' });
-  } catch (err) {
-    console.error('Delete item error:', err);
+  } catch (error) {
+    console.error('Error deleting item:', error);
     res.status(500).json({ error: 'Failed to delete item' });
   }
 });

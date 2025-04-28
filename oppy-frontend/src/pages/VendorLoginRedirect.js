@@ -19,4 +19,4 @@ const VendorLoginRedirect = () => {
   );
 };
 
-export default VendorLoginRedirect;
+export default VendorLoginRedirect; 

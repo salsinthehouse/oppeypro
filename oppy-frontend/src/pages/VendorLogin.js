@@ -1,24 +1,55 @@
-// File: src/pages/VendorLoginRedirect.js
+// File: src/pages/VendorLogin.js
 
-import React, { useEffect } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import authConfig from '../config/auth';
+import { Button, Container, Typography } from '@mui/material';
 
-const VendorLoginRedirect = () => {
-  useEffect(() => {
-    // ✅ Replace the placeholders below with your actual values
-    const COGNITO_DOMAIN = 'https://oppy.auth.ap-southeast-2.amazoncognito.com';
-    const CLIENT_ID = '5jf5h16hat2fcju90p0r2tjd6k';
-    const REDIRECT_URI = 'http://localhost:3000/vendor/callback'; // Make sure this matches your Cognito App Client callback URL
+const VendorLogin = () => {
+  const navigate = useNavigate();
+  
+  // Construct the login URL with all required parameters
+  const loginUrl = new URL(`${authConfig.COGNITO_DOMAIN}/oauth2/authorize`);
+  loginUrl.searchParams.append('client_id', authConfig.CLIENT_ID);
+  loginUrl.searchParams.append('response_type', authConfig.RESPONSE_TYPE);
+  loginUrl.searchParams.append('scope', authConfig.SCOPE);
+  loginUrl.searchParams.append('redirect_uri', authConfig.CALLBACK_URI);
+  loginUrl.searchParams.append('state', authConfig.STATE);
 
-    const loginUrl = `${COGNITO_DOMAIN}/login?client_id=${CLIENT_ID}&response_type=code&scope=email+openid+profile&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
-
-    window.location.href = loginUrl;
-  }, []);
+  const handleDevLogin = () => {
+    // For development only - simulate a successful login
+    localStorage.setItem('accessToken', 'dev-token');
+    localStorage.setItem('idToken', 'dev-id-token');
+    localStorage.setItem('userType', 'vendor');
+    navigate('/vendor/dashboard');
+  };
 
   return (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <p>Redirecting to secure vendor login...</p>
-    </div>
+    <Container maxWidth="sm" style={{ textAlign: 'center', padding: '2rem' }}>
+      <Typography variant="h4" gutterBottom>Vendor Login</Typography>
+      
+      <Button 
+        variant="contained" 
+        color="primary" 
+        onClick={() => window.location.href = loginUrl.toString()}
+        style={{ marginBottom: '1rem' }}
+        fullWidth
+      >
+        Login with Cognito
+      </Button>
+
+      {process.env.NODE_ENV === 'development' && (
+        <Button 
+          variant="outlined" 
+          color="secondary" 
+          onClick={handleDevLogin}
+          fullWidth
+        >
+          Development Login (Skip Cognito)
+        </Button>
+      )}
+    </Container>
   );
 };
 
-export default VendorLoginRedirect;
+export default VendorLogin;

@@ -28,7 +28,10 @@ const stripeWebhook = require('./routes/stripeWebhook');
 app.use('/webhook', stripeWebhook); // Uses express.raw internally
 
 // ✅ Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['https://oppy.co.nz', 'http://localhost:3000'],
+  credentials: true
+}));
 app.use(express.json());
 
 // ✅ Serve static files from uploads directory
@@ -48,11 +51,11 @@ try {
   app.use('/api/vendors', require('./routes/vendors'));
   console.log('✅ Vendor routes mounted at /api/vendors');
 
-  app.use('/api/admin', require('./routes/admin'));
-  console.log('✅ Admin routes mounted at /api/admin');
-
   app.use('/api/items', require('./routes/items'));
-  console.log('✅ Item routes mounted at /api/items');
+  console.log('✅ Items routes mounted at /api/items');
+
+  app.use('/api/public/items', require('./routes/publicItems'));
+  console.log('✅ Public items routes mounted at /api/public/items');
 
   app.use('/api/cart', require('./routes/cart'));
   console.log('✅ Cart routes mounted at /api/cart');

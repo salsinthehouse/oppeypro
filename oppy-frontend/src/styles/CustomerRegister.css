@@ -60,3 +60,15 @@
   padding: 0.5rem;
   border-radius: 6px;
 }
+
+.social-button.google {
+  background-color: #ffa24d;
+}
+
+.social-button.facebook {
+  background-color: #ff8c1a;
+}
+
+.social-button.twitter {
+  background-color: #ffa24d;
+}

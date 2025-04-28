@@ -1,52 +1,68 @@
 // File: src/pages/CustomerCallback.js
 
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import authConfig from '../config/auth';
 
 const CustomerCallback = () => {
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    const exchangeCodeForToken = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      if (!code) return;
-
-      const domain = 'https://ap-southeast-2h3klci7kn.auth.ap-southeast-2.amazoncognito.com';
-      const clientId = '5jf5h16hat2fcju90p0r2tjd6k';
-      const redirectUri = 'https://oppy.co.nz/customer/callback';
-
-      const body = new URLSearchParams();
-      body.append('grant_type', 'authorization_code');
-      body.append('client_id', clientId);
-      body.append('code', code);
-      body.append('redirect_uri', redirectUri);
-
+    const getToken = async () => {
       try {
-        const res = await fetch(`${domain}/oauth2/token`, {
+        const urlParams = new URLSearchParams(location.search);
+        const code = urlParams.get('code');
+        
+        if (!code) {
+          throw new Error('No authorization code found');
+        }
+
+        const body = new URLSearchParams();
+        body.append('grant_type', 'authorization_code');
+        body.append('client_id', authConfig.CLIENT_ID);
+        body.append('code', code);
+        body.append('redirect_uri', authConfig.CUSTOMER_REDIRECT_URI);
+
+        const res = await fetch(`${authConfig.COGNITO_DOMAIN}/oauth2/token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: body.toString()
+          body: body
         });
 
-        const data = await res.json();
-        if (!data.id_token) throw new Error('Token exchange failed');
+        if (!res.ok) {
+          throw new Error('Failed to get access token');
+        }
 
-        localStorage.setItem('customerAccessToken', data.id_token);
-        navigate('/');
+        const data = await res.json();
+        localStorage.setItem('customerAccessToken', data.access_token);
+        localStorage.setItem('customerIdToken', data.id_token);
+        
+        navigate('/customer/dashboard');
       } catch (err) {
-        console.error('❌ Token exchange error:', err);
+        console.error('Auth error:', err);
+        setError(err.message);
       }
     };
 
-    exchangeCodeForToken();
-  }, [navigate]);
+    getToken();
+  }, [location, navigate]);
+
+  if (error) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>
+        <h2>Authentication Error</h2>
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <p>Logging you in...</p>
+      <h2>Processing login...</h2>
     </div>
   );
 };
