@@ -1,27 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import {
   Container,
+  Typography,
+  Box,
   Grid,
   Card,
   CardContent,
-  Typography,
   Button,
-  Box,
-  Alert,
+  Alert
 } from '@mui/material';
-import axios from '../config/api';
 import AddItemForm from '../components/AddItemForm';
-import '../styles/VendorDashboard.css';
+import './VendorDashboard.css';
 
 const VendorDashboard = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -40,11 +40,11 @@ const VendorDashboard = () => {
       });
       
       if (pageToLoad === 1) {
-        setItems(response.data.items);
+        setItems(response.data.items || []);
       } else {
-        setItems(prev => [...prev, ...response.data.items]);
+        setItems(prev => [...prev, ...(response.data.items || [])]);
       }
-      setTotal(response.data.total);
+      setTotal(response.data.total || 0);
       setPage(pageToLoad);
       setError(null);
     } catch (err) {
@@ -68,7 +68,6 @@ const VendorDashboard = () => {
   const handleAddItem = async (itemData) => {
     try {
       const response = await axios.post('/api/vendors/items', itemData);
-      // Prepend the new item to the list
       setItems(prev => [response.data, ...prev]);
       setError(null);
     } catch (err) {
@@ -80,14 +79,13 @@ const VendorDashboard = () => {
         setError('Failed to add item. Please try again.');
         console.error('Error adding item:', err);
       }
-      throw err; // Re-throw to let the form handle the error
+      throw err;
     }
   };
 
   const handleEditItem = async (itemData) => {
     try {
       const response = await axios.put(`/api/vendors/items/${selectedItem._id}`, itemData);
-      // Update the item in the list
       setItems(prev => prev.map(item => 
         item._id === selectedItem._id ? response.data.item : item
       ));
@@ -102,7 +100,7 @@ const VendorDashboard = () => {
         setError('Failed to update item. Please try again.');
         console.error('Error updating item:', err);
       }
-      throw err; // Re-throw to let the form handle the error
+      throw err;
     }
   };
 
@@ -110,7 +108,6 @@ const VendorDashboard = () => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
         await axios.delete(`/api/vendors/items/${itemId}`);
-        // After deleting an item, reload the first page
         await fetchItems(1);
         setError(null);
       } catch (err) {
@@ -160,7 +157,7 @@ const VendorDashboard = () => {
 
         <Typography variant="h5" sx={{ mb: 2 }}>Your Listings</Typography>
         <Grid container spacing={3} className="items-grid">
-          {items.map((item) => (
+          {Array.isArray(items) && items.map((item) => (
             <Grid item xs={12} sm={6} md={4} key={item._id}>
               <Card className="item-card">
                 {item.images?.[0] && (
@@ -168,6 +165,10 @@ const VendorDashboard = () => {
                     src={item.images[0]}
                     alt={item.name}
                     className="item-image"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/placeholder-image.jpg';
+                    }}
                   />
                 )}
                 <CardContent>
@@ -204,8 +205,7 @@ const VendorDashboard = () => {
           ))}
         </Grid>
 
-        {/* Load More Button */}
-        {items.length < total && (
+        {items.length > 0 && items.length < total && (
           <Box className="load-more-container" mt={4} mb={4} textAlign="center">
             <Button
               variant="contained"
