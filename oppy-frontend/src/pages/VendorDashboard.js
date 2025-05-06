@@ -7,16 +7,11 @@ import {
   CardContent,
   Typography,
   Button,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  MenuItem,
   Box,
   Alert,
 } from '@mui/material';
 import axios from '../config/api';
+import AddItemForm from '../components/AddItemForm';
 import '../styles/VendorDashboard.css';
 
 const VendorDashboard = () => {
@@ -24,17 +19,9 @@ const VendorDashboard = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [openDialog, setOpenDialog] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    location: '',
-    images: [],
-  });
-
-  const locations = ['Central', 'North', 'South', 'East', 'West'];
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -45,10 +32,20 @@ const VendorDashboard = () => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }, [navigate]);
 
-  const fetchItems = useCallback(async () => {
+  const fetchItems = useCallback(async (pageToLoad = 1) => {
     try {
-      const response = await axios.get('/api/vendors/items');
-      setItems(response.data);
+      setLoading(true);
+      const response = await axios.get('/api/vendors/items', {
+        params: { page: pageToLoad, limit: 20 }
+      });
+      
+      if (pageToLoad === 1) {
+        setItems(response.data.items);
+      } else {
+        setItems(prev => [...prev, ...response.data.items]);
+      }
+      setTotal(response.data.total);
+      setPage(pageToLoad);
       setError(null);
     } catch (err) {
       if (err.response?.status === 401) {
@@ -65,91 +62,14 @@ const VendorDashboard = () => {
   }, [navigate]);
 
   useEffect(() => {
-    fetchItems();
+    fetchItems(1);
   }, [fetchItems]);
 
-  const handleOpenDialog = (item = null) => {
-    if (item) {
-      setSelectedItem(item);
-      setFormData({
-        name: item.name,
-        description: item.description,
-        price: item.price,
-        location: item.location,
-        images: item.images || [],
-      });
-    } else {
-      setSelectedItem(null);
-      setFormData({
-        name: '',
-        description: '',
-        price: '',
-        location: '',
-        images: [],
-      });
-    }
-    setOpenDialog(true);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setSelectedItem(null);
-    setFormData({
-      name: '',
-      description: '',
-      price: '',
-      location: '',
-      images: [],
-    });
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'price' ? parseFloat(value) || '' : value
-    }));
-  };
-
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    const formData = new FormData();
-    
-    files.forEach(file => {
-      formData.append('images', file);
-    });
-
+  const handleAddItem = async (itemData) => {
     try {
-      const response = await axios.post('/api/vendor/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, ...response.data.urls]
-      }));
-    } catch (err) {
-      if (err.response?.status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userType');
-        navigate('/login/vendor');
-      } else {
-        console.error('Error uploading images:', err);
-        setError('Failed to upload images. Please try again.');
-      }
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (selectedItem) {
-        await axios.put(`/api/vendor/items/${selectedItem._id}`, formData);
-      } else {
-        await axios.post('/api/vendor/items', formData);
-      }
-      fetchItems();
-      handleCloseDialog();
+      const response = await axios.post('/api/vendors/items', itemData);
+      // Prepend the new item to the list
+      setItems(prev => [response.data, ...prev]);
       setError(null);
     } catch (err) {
       if (err.response?.status === 401) {
@@ -157,17 +77,41 @@ const VendorDashboard = () => {
         localStorage.removeItem('userType');
         navigate('/login/vendor');
       } else {
-        console.error('Error saving item:', err);
-        setError('Failed to save item. Please try again.');
+        setError('Failed to add item. Please try again.');
+        console.error('Error adding item:', err);
       }
+      throw err; // Re-throw to let the form handle the error
+    }
+  };
+
+  const handleEditItem = async (itemData) => {
+    try {
+      const response = await axios.put(`/api/vendors/items/${selectedItem._id}`, itemData);
+      // Update the item in the list
+      setItems(prev => prev.map(item => 
+        item._id === selectedItem._id ? response.data.item : item
+      ));
+      setSelectedItem(null);
+      setError(null);
+    } catch (err) {
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userType');
+        navigate('/login/vendor');
+      } else {
+        setError('Failed to update item. Please try again.');
+        console.error('Error updating item:', err);
+      }
+      throw err; // Re-throw to let the form handle the error
     }
   };
 
   const handleDeleteItem = async (itemId) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
-        await axios.delete(`/api/vendor/items/${itemId}`);
-        fetchItems();
+        await axios.delete(`/api/vendors/items/${itemId}`);
+        // After deleting an item, reload the first page
+        await fetchItems(1);
         setError(null);
       } catch (err) {
         if (err.response?.status === 401) {
@@ -182,7 +126,7 @@ const VendorDashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading && items.length === 0) {
     return (
       <Box className="loading-container">
         <Typography variant="h5">Loading dashboard...</Typography>
@@ -195,14 +139,6 @@ const VendorDashboard = () => {
       <Container maxWidth="lg">
         <Box className="dashboard-header">
           <Typography variant="h4">Vendor Dashboard</Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => handleOpenDialog()}
-            className="add-item-button"
-          >
-            Add New Item
-          </Button>
         </Box>
 
         {error && (
@@ -211,6 +147,18 @@ const VendorDashboard = () => {
           </Alert>
         )}
 
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" sx={{ mb: 2 }}>
+            {selectedItem ? 'Edit Item' : 'Add New Item'}
+          </Typography>
+          <AddItemForm 
+            onAdd={selectedItem ? handleEditItem : handleAddItem}
+            initialData={selectedItem}
+            onCancel={() => setSelectedItem(null)}
+          />
+        </Box>
+
+        <Typography variant="h5" sx={{ mb: 2 }}>Your Listings</Typography>
         <Grid container spacing={3} className="items-grid">
           {items.map((item) => (
             <Grid item xs={12} sm={6} md={4} key={item._id}>
@@ -237,7 +185,8 @@ const VendorDashboard = () => {
                     <Button
                       variant="outlined"
                       color="primary"
-                      onClick={() => handleOpenDialog(item)}
+                      onClick={() => setSelectedItem(item)}
+                      sx={{ mr: 1 }}
                     >
                       Edit
                     </Button>
@@ -255,76 +204,19 @@ const VendorDashboard = () => {
           ))}
         </Grid>
 
-        <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-          <DialogTitle>
-            {selectedItem ? 'Edit Item' : 'Add New Item'}
-          </DialogTitle>
-          <DialogContent>
-            <form onSubmit={handleSubmit} className="item-form">
-              <TextField
-                name="name"
-                label="Item Name"
-                value={formData.name}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                margin="normal"
-              />
-              <TextField
-                name="description"
-                label="Description"
-                value={formData.description}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                multiline
-                rows={3}
-                margin="normal"
-              />
-              <TextField
-                name="price"
-                label="Price"
-                type="number"
-                value={formData.price}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                margin="normal"
-              />
-              <TextField
-                name="location"
-                label="Location"
-                select
-                value={formData.location}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                margin="normal"
-              >
-                {locations.map((location) => (
-                  <MenuItem key={location} value={location}>
-                    {location}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageUpload}
-                className="image-input"
-              />
-            </form>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog} color="primary">
-              Cancel
+        {/* Load More Button */}
+        {items.length < total && (
+          <Box className="load-more-container" mt={4} mb={4} textAlign="center">
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => fetchItems(page + 1)}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Load More'}
             </Button>
-            <Button onClick={handleSubmit} color="primary" variant="contained">
-              {selectedItem ? 'Update' : 'Create'}
-            </Button>
-          </DialogActions>
-        </Dialog>
+          </Box>
+        )}
       </Container>
     </div>
   );

@@ -29,7 +29,7 @@ const VendorItemForm = ({ vendorId, onItemCreated }) => {
         price: parseFloat(formData.price),
         vendorId,
       };
-      const res = await axios.post('/api/items', newItem);
+      const res = await axios.post('/api/vendors/items', newItem);
       alert('✅ Item created successfully!');
       onItemCreated(res.data);
       setFormData({

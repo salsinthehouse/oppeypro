@@ -7,7 +7,7 @@ const VendorItemList = ({ vendorId }) => {
   useEffect(() => {
     const fetchVendorItems = async () => {
       try {
-        const res = await axios.get(`/api/items/vendor/${vendorId}`);
+        const res = await axios.get('/api/vendors/items');
         setItems(res.data);
       } catch (err) {
         console.error('❌ Failed to fetch items', err);
