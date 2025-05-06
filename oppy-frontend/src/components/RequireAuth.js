@@ -1,21 +1,13 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 
-const RequireAuth = ({ children, role }) => {
-  const vendorToken = localStorage.getItem('vendorAccessToken') || localStorage.getItem('vendorToken');
-  const customerToken = localStorage.getItem('customerAccessToken');
-  const adminToken = localStorage.getItem('adminToken');
+const RequireAuth = ({ children, userType }) => {
+  const accessToken = localStorage.getItem('accessToken');
+  const idToken = localStorage.getItem('idToken');
+  const currentUserType = localStorage.getItem('userType');
 
-  if (role === 'vendor' && !vendorToken) {
-    return <Navigate to="/login/vendor" />;
-  }
-
-  if (role === 'customer' && !customerToken) {
-    return <Navigate to="/login/customer" />;
-  }
-
-  if (role === 'admin' && !adminToken) {
-    return <Navigate to="/login/admin" />;
+  if (!accessToken || !idToken || currentUserType !== userType) {
+    return <Navigate to={`/login/${userType}`} />;
   }
 
   return children;

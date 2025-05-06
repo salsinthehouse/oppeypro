@@ -1,92 +1,30 @@
-// File: src/pages/CustomerLogin.js
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from '../config/api';
-import { 
-  Button, 
-  Container, 
-  Typography, 
-  TextField,
-  Box,
-  Alert
-} from '@mui/material';
+import { useEffect } from 'react';
+import { generateCodeVerifier, generateCodeChallenge } from '../auth/pkce';
+import authConfig from '../config/auth';
 
 const CustomerLogin = () => {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const { COGNITO_DOMAIN, CLIENT_ID, REDIRECT_URI, RESPONSE_TYPE, SCOPE } = authConfig;
+    (async () => {
+      const verifier = generateCodeVerifier();
+      const challenge = await generateCodeChallenge(verifier);
+      localStorage.setItem('pkce_verifier', verifier);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await axios.post('/api/auth/login', {
-        email,
-        password
+      const params = new URLSearchParams({
+        client_id:             CLIENT_ID,
+        response_type:         RESPONSE_TYPE,
+        redirect_uri:          REDIRECT_URI,
+        scope:                 SCOPE,
+        code_challenge:        challenge,
+        code_challenge_method: 'S256',
+        state:                 'customer'
       });
 
-      const { tokens } = response.data;
-      localStorage.setItem('accessToken', tokens.AccessToken);
-      localStorage.setItem('idToken', tokens.IdToken);
-      localStorage.setItem('userType', 'customer');
-      
-      navigate('/customer/dashboard');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
+      window.location.href = `${COGNITO_DOMAIN}/oauth2/authorize?${params}`;
+    })();
+  }, []);
 
-  return (
-    <Container maxWidth="sm" style={{ textAlign: 'center', padding: '2rem' }}>
-      <Typography variant="h4" gutterBottom>Customer Login</Typography>
-      
-      <Box component="form" onSubmit={handleLogin} sx={{ mt: 3 }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        
-        <TextField
-          fullWidth
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          margin="normal"
-          required
-        />
-        
-        <TextField
-          fullWidth
-          label="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          margin="normal"
-          required
-        />
-        
-        <Button 
-          type="submit"
-          variant="contained" 
-          color="primary"
-          sx={{ mt: 2 }}
-          disabled={loading}
-          fullWidth
-        >
-          {loading ? 'Logging in...' : 'Login'}
-        </Button>
-      </Box>
-    </Container>
-  );
+  return null;
 };
 
 export default CustomerLogin;

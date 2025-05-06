@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Grid,
@@ -19,6 +20,7 @@ import axios from '../config/api';
 import '../styles/VendorDashboard.css';
 
 const VendorDashboard = () => {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,21 +37,36 @@ const VendorDashboard = () => {
   const locations = ['Central', 'North', 'South', 'East', 'West'];
 
   useEffect(() => {
-    fetchItems();
-  }, []);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login/vendor');
+      return;
+    }
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  }, [navigate]);
 
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     try {
-      const response = await axios.get('/public/items/all');
+      const response = await axios.get('/api/vendors/items');
       setItems(response.data);
       setError(null);
     } catch (err) {
-      setError('Failed to fetch items. Please try again.');
-      console.error('Error fetching items:', err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userType');
+        navigate('/login/vendor');
+      } else {
+        setError('Failed to fetch items. Please try again.');
+        console.error('Error fetching items:', err);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
 
   const handleOpenDialog = (item = null) => {
     if (item) {
@@ -103,7 +120,7 @@ const VendorDashboard = () => {
     });
 
     try {
-      const response = await axios.post('/upload', formData, {
+      const response = await axios.post('/api/vendor/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
@@ -112,8 +129,14 @@ const VendorDashboard = () => {
         images: [...prev.images, ...response.data.urls]
       }));
     } catch (err) {
-      console.error('Error uploading images:', err);
-      setError('Failed to upload images. Please try again.');
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userType');
+        navigate('/login/vendor');
+      } else {
+        console.error('Error uploading images:', err);
+        setError('Failed to upload images. Please try again.');
+      }
     }
   };
 
@@ -121,28 +144,40 @@ const VendorDashboard = () => {
     e.preventDefault();
     try {
       if (selectedItem) {
-        await axios.put(`/items/${selectedItem._id}`, formData);
+        await axios.put(`/api/vendor/items/${selectedItem._id}`, formData);
       } else {
-        await axios.post('/items', formData);
+        await axios.post('/api/vendor/items', formData);
       }
       fetchItems();
       handleCloseDialog();
       setError(null);
     } catch (err) {
-      console.error('Error saving item:', err);
-      setError('Failed to save item. Please try again.');
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userType');
+        navigate('/login/vendor');
+      } else {
+        console.error('Error saving item:', err);
+        setError('Failed to save item. Please try again.');
+      }
     }
   };
 
   const handleDeleteItem = async (itemId) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
-        await axios.delete(`/items/${itemId}`);
+        await axios.delete(`/api/vendor/items/${itemId}`);
         fetchItems();
         setError(null);
       } catch (err) {
-        console.error('Error deleting item:', err);
-        setError('Failed to delete item. Please try again.');
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('userType');
+          navigate('/login/vendor');
+        } else {
+          console.error('Error deleting item:', err);
+          setError('Failed to delete item. Please try again.');
+        }
       }
     }
   };
